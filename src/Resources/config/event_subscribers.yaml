@@ -2,6 +2,9 @@ services:
     # Event Subscribers - Only include existing classes
     Nkamuo\NotificationTrackerBundle\EventSubscriber\MailerEventSubscriber:
         arguments:
+            $messageTracker: '@Nkamuo\NotificationTrackerBundle\Service\MessageTracker'
+            $entityManager: '@doctrine.orm.entity_manager'
+            $logger: '@logger'
             $enabled: '%notification_tracker.tracking.enabled%'
         tags:
             - { name: kernel.event_subscriber }
