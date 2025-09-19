@@ -45,6 +45,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.11] - 2025-09-19
+
+### Fixed
+- Fixed API Platform controller imports in Message entity
+- Added missing `use` statements for RetryMessageController and CancelMessageController
+- Resolves "unknown service as controller" error during cache:clear operations
+
+### Added
+- Comprehensive bundle validation script (`validate_bundle.php`)
+- Pre-release testing that validates:
+  - PHP class autoloading
+  - YAML configuration syntax
+  - Service constructor compatibility
+  - API Platform controller registration
+  - Dependency injection setup
+
+### Developer Experience
+- Bundle releases now include proper validation before publishing
+- Validation script can be run locally: `php validate_bundle.php`
+
 ## [0.1.10] - 2025-09-19
 
 ### Fixed
