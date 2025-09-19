@@ -2,17 +2,6 @@ services:
     _defaults:
         autowire: true
         autoconfigure: true
-        bind:
-            $bundleEnabled: '%notification_tracker.enabled%'
-            $trackingEnabled: '%notification_tracker.tracking.enabled%'
-            $trackOpens: '%notification_tracker.tracking.track_opens%'
-            $trackClicks: '%notification_tracker.tracking.track_clicks%'
-            $storeContent: '%notification_tracker.tracking.store_content%'
-            $attachmentDirectory: '%notification_tracker.storage.attachment_directory%'
-            $maxAttachmentSize: '%notification_tracker.storage.max_attachment_size%'
-            $maxRetries: '%notification_tracker.retry.max_retries%'
-            $retryDelay: '%notification_tracker.retry.retry_delay%'
-            $retryMultiplier: '%notification_tracker.retry.retry_multiplier%'
 
     Nkamuo\NotificationTrackerBundle\:
         resource: '../../*'
