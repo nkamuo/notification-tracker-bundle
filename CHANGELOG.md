@@ -45,6 +45,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.10] - 2025-09-19
+
+### Fixed
+- Fixed MailerEventSubscriber constructor argument ordering issue
+- Explicitly define all constructor arguments to prevent gaps in service definition
+- Resolves "Invalid constructor argument 3 for service" error during cache:clear
+- Constructor now properly defines all 4 arguments in correct order
+
+### Note
+- This release includes proper service testing validation before commit
+- All services now have explicit argument definitions where needed
+
 ## [0.1.9] - 2025-09-19
 
 ### Fixed
