@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.4] - 2025-09-19
+
+### Fixed
+- Removed references to non-existent controller and service classes
+- Commented out service definitions for classes not yet implemented
+- Fixed RegisterControllerArgumentLocatorsPass error during installation
+- Simplified service configuration to only include existing classes
+- Improved YAML syntax and removed duplicate service definitions
+
+### Changed
+- Service configurations now only reference implemented classes
+- Non-existent analytics, template, and additional command services are commented out
+- Cleaner, more maintainable service definitions
+
 ## [0.1.3] - 2025-09-19
 
 ### Fixed

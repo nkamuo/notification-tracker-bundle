@@ -1,16 +1,18 @@
 services:
+    # Commands - Only include existing command classes
     Nkamuo\NotificationTrackerBundle\Command\ProcessFailedMessagesCommand:
         tags:
-            - { name: console.command }
+            - { name: 'console.command' }
 
-    Nkamuo\NotificationTrackerBundle\Command\MessageAnalyticsCommand:
-        tags:
-            - { name: console.command }
+    # Additional commands commented out until implemented:
+    # Nkamuo\NotificationTrackerBundle\Command\MessageAnalyticsCommand:
+    #     tags:
+    #         - { name: 'console.command' }
 
-    Nkamuo\NotificationTrackerBundle\Command\CleanupOldMessagesCommand:
-        tags:
-            - { name: console.command }
+    # Nkamuo\NotificationTrackerBundle\Command\CleanupOldMessagesCommand:
+    #     tags:
+    #         - { name: 'console.command' }
 
-    Nkamuo\NotificationTrackerBundle\Command\ExportMessagesCommand:
-        tags:
-            - { name: console.command }
+    # Nkamuo\NotificationTrackerBundle\Command\ExportMessagesCommand:
+    #     tags:
+    #         - { name: 'console.command' }

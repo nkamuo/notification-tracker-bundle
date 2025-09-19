@@ -1,5 +1,5 @@
 services:
-    # Message Tracking Services
+    # Core Tracking Services (only include existing classes)
     Nkamuo\NotificationTrackerBundle\Service\MessageTracker:
         arguments:
             $entityManager: '@doctrine.orm.entity_manager'
@@ -15,7 +15,6 @@ services:
         tags:
             - { name: 'notification_tracker.notification_tracker' }
 
-    # Attachment Manager
     Nkamuo\NotificationTrackerBundle\Service\AttachmentManager:
         arguments:
             $attachmentDirectory: '%notification_tracker.storage.attachment_directory%'
@@ -23,7 +22,6 @@ services:
             $allowedMimeTypes: '%notification_tracker.storage.allowed_mime_types%'
             $entityManager: '@doctrine.orm.entity_manager'
 
-    # Message Retry Service
     Nkamuo\NotificationTrackerBundle\Service\MessageRetryService:
         arguments:
             $entityManager: '@doctrine.orm.entity_manager'
@@ -31,3 +29,8 @@ services:
             $maxRetries: '%notification_tracker.retry.max_retries%'
             $retryDelay: '%notification_tracker.retry.retry_delay%'
             $retryMultiplier: '%notification_tracker.retry.retry_multiplier%'
+
+    Nkamuo\NotificationTrackerBundle\Service\WebhookProcessor:
+        arguments:
+            $entityManager: '@doctrine.orm.entity_manager'
+            $messageBus: '@messenger.bus.default'
