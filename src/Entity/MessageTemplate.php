@@ -13,6 +13,7 @@ use ApiPlatform\Metadata\Delete;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Nkamuo\NotificationTrackerBundle\Repository\MessageTemplateRepository;
+use Nkamuo\NotificationTrackerBundle\Config\ApiRoutes;
 use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Uid\Ulid;
 use Symfony\Component\Validator\Constraints as Assert;
@@ -28,22 +29,22 @@ use Symfony\Component\Validator\Constraints as Assert;
     denormalizationContext: ['groups' => ['template:write']],
     operations: [
         new GetCollection(
-            uriTemplate: '/notification-tracker/templates',
+            uriTemplate: ApiRoutes::getTemplate(),
             normalizationContext: ['groups' => ['template:list']]
         ),
         new Get(
-            uriTemplate: '/notification-tracker/templates/{id}',
+            uriTemplate: ApiRoutes::getTemplate('/{id}'),
             requirements: ['id' => '[0-9A-HJKMNP-TV-Z]{26}']
         ),
         new Post(
-            uriTemplate: '/notification-tracker/templates'
+            uriTemplate: ApiRoutes::getTemplate()
         ),
         new Put(
-            uriTemplate: '/notification-tracker/templates/{id}',
+            uriTemplate: ApiRoutes::getTemplate('/{id}'),
             requirements: ['id' => '[0-9A-HJKMNP-TV-Z]{26}']
         ),
         new Delete(
-            uriTemplate: '/notification-tracker/templates/{id}',
+            uriTemplate: ApiRoutes::getTemplate('/{id}'),
             requirements: ['id' => '[0-9A-HJKMNP-TV-Z]{26}']
         ),
     ]

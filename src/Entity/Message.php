@@ -20,6 +20,7 @@ use Doctrine\ORM\Mapping as ORM;
 use Nkamuo\NotificationTrackerBundle\Repository\MessageRepository;
 use Nkamuo\NotificationTrackerBundle\Controller\Api\RetryMessageController;
 use Nkamuo\NotificationTrackerBundle\Controller\Api\CancelMessageController;
+use Nkamuo\NotificationTrackerBundle\Config\ApiRoutes;
 use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Uid\Ulid;
 use Symfony\Component\Validator\Constraints as Assert;
@@ -46,31 +47,31 @@ use Symfony\Component\Validator\Constraints as Assert;
     denormalizationContext: ['groups' => ['message:write']],
     operations: [
         new GetCollection(
-            uriTemplate: '/notification-tracker/messages',
+            uriTemplate: ApiRoutes::getMessage(),
             normalizationContext: ['groups' => ['message:list']],
             paginationItemsPerPage: 25,
             paginationMaximumItemsPerPage: 100,
             paginationPartial: true
         ),
         new Get(
-            uriTemplate: '/notification-tracker/messages/{id}',
+            uriTemplate: ApiRoutes::getMessage('/{id}'),
             requirements: ['id' => '[0-9A-HJKMNP-TV-Z]{26}'],
             normalizationContext: ['groups' => ['message:detail']]
         ),
         new Post(
-            uriTemplate: '/notification-tracker/messages/{id}/retry',
+            uriTemplate: ApiRoutes::getMessage('/{id}/retry'),
             requirements: ['id' => '[0-9A-HJKMNP-TV-Z]{26}'],
             controller: RetryMessageController::class,
             name: 'notification_tracker_retry_message'
         ),
         new Post(
-            uriTemplate: '/notification-tracker/messages/{id}/cancel',
+            uriTemplate: ApiRoutes::getMessage('/{id}/cancel'),
             requirements: ['id' => '[0-9A-HJKMNP-TV-Z]{26}'],
             controller: CancelMessageController::class,
             name: 'notification_tracker_cancel_message'
         ),
         new Delete(
-            uriTemplate: '/notification-tracker/messages/{id}',
+            uriTemplate: ApiRoutes::getMessage('/{id}'),
             requirements: ['id' => '[0-9A-HJKMNP-TV-Z]{26}']
         ),
     ]

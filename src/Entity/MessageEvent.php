@@ -9,6 +9,7 @@ use ApiPlatform\Metadata\GetCollection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Nkamuo\NotificationTrackerBundle\Repository\MessageEventRepository;
+use Nkamuo\NotificationTrackerBundle\Config\ApiRoutes;
 use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Uid\Ulid;
 
@@ -21,7 +22,7 @@ use Symfony\Component\Uid\Ulid;
     description: 'Message lifecycle events',
     operations: [
         new GetCollection(
-            uriTemplate: '/notification-tracker/messages/{id}/events',
+            uriTemplate: ApiRoutes::getMessage('/{id}/events'),
             requirements: ['id' => '[0-9A-HJKMNP-TV-Z]{26}'],
             normalizationContext: ['groups' => ['event:read']]
         ),

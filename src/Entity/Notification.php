@@ -16,6 +16,7 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Nkamuo\NotificationTrackerBundle\Repository\NotificationRepository;
+use Nkamuo\NotificationTrackerBundle\Config\ApiRoutes;
 use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Uid\Ulid;
 
@@ -29,14 +30,14 @@ use Symfony\Component\Uid\Ulid;
     denormalizationContext: ['groups' => ['notification:write']],
     operations: [
         new GetCollection(
-            uriTemplate: '/notification-tracker/notifications',
+            uriTemplate: ApiRoutes::getNotification(),
             normalizationContext: ['groups' => ['notification:list']],
             paginationItemsPerPage: 20,
             paginationMaximumItemsPerPage: 100,
             paginationPartial: true
         ),
         new Get(
-            uriTemplate: '/notification-tracker/notifications/{id}',
+            uriTemplate: ApiRoutes::getNotification('/{id}'),
             requirements: ['id' => '[0-9A-HJKMNP-TV-Z]{26}'],
             normalizationContext: ['groups' => ['notification:detail']]
         ),
