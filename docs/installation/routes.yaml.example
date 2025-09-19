@@ -1,0 +1,18 @@
+# config/routes.yaml - Add this to your main Symfony project
+
+# Import NotificationTrackerBundle API Platform routes
+notification_tracker_api:
+    resource: '@NotificationTrackerBundle/Resources/config/routes/'
+    type: directory
+    prefix: /api
+
+# Or import specific route files
+notification_tracker_routes:
+    resource: '@NotificationTrackerBundle/Resources/config/routes.yaml'
+    prefix: /api
+
+# If you want to customize the prefix for notification tracker routes
+notification_tracker_custom:
+    resource: '@NotificationTrackerBundle/Entity/'
+    type: api_platform
+    prefix: /api/v1/notification-tracker

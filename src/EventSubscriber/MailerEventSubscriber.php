@@ -6,6 +6,7 @@ namespace Nkamuo\NotificationTrackerBundle\EventSubscriber;
 
 use Nkamuo\NotificationTrackerBundle\Entity\EmailMessage;
 use Nkamuo\NotificationTrackerBundle\Entity\MessageEvent;
+use Nkamuo\NotificationTrackerBundle\Entity\MessageContent;
 use Nkamuo\NotificationTrackerBundle\Service\MessageTracker;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
@@ -103,10 +104,18 @@ class MailerEventSubscriber implements EventSubscriberInterface
             $trackedMessage = $this->getTrackedMessage($message);
             
             if (!$trackedMessage) {
-                $this->logger->warning('No tracked message found for SentMessageEvent', [
+                // Auto-track untracked messages (e.g., from mailer:test command)
+                $this->logger->info('Auto-tracking untracked message in SentMessageEvent', [
                     'subject' => $message->getSubject(),
                 ]);
-                return;
+                
+                $trackedMessage = $this->autoTrackMessage($message);
+                if (!$trackedMessage) {
+                    $this->logger->warning('Failed to auto-track message for SentMessageEvent', [
+                        'subject' => $message->getSubject(),
+                    ]);
+                    return;
+                }
             }
 
             $sentMessage = $event->getMessage();
@@ -246,5 +255,39 @@ class MailerEventSubscriber implements EventSubscriberInterface
     {
         $messageId = spl_object_id($message);
         unset($this->messageMap[$messageId]);
+    }
+
+    /**
+     * Auto-track a message that wasn't tracked before sending
+     * This handles cases like mailer:test command or direct Mailer usage
+     */
+    private function autoTrackMessage(Email $message): ?EmailMessage
+    {
+        try {
+            // Use the MessageTracker to properly track the email
+            $trackedMessage = $this->messageTracker->trackEmail(
+                $message,
+                null, // transportName
+                null, // notification
+                [
+                    'auto_tracked' => true,
+                    'source' => 'MailerEventSubscriber',
+                    'original_event' => 'SentMessageEvent'
+                ]
+            );
+            
+            // Store in message map for future events
+            $messageId = spl_object_id($message);
+            $this->messageMap[$messageId] = $trackedMessage;
+            
+            return $trackedMessage;
+            
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to auto-track message', [
+                'error' => $e->getMessage(),
+                'subject' => $message->getSubject(),
+            ]);
+            return null;
+        }
     }
 }

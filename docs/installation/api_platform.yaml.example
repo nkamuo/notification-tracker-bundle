@@ -1,0 +1,14 @@
+# config/packages/api_platform.yaml - Add this to your main Symfony project
+
+api_platform:
+    # Your existing configuration...
+    
+    mapping:
+        paths:
+            # Your existing paths
+            - '%kernel.project_dir%/src/Entity'
+            # Add the bundle's entities
+            - '%kernel.project_dir%/vendor/nkamuo/notification-tracker-bundle/src/Entity'
+    
+    # Optional: Configure route prefix if you want all API routes under /api
+    path_segment_name_generator: api_platform.path_segment_name_generator.underscore
