@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.5] - 2025-09-19
+
+### Added
+- Implemented missing message handler classes:
+  - TrackEmailMessageHandler for tracking email events
+  - ProcessWebhookMessageHandler for processing webhook messages
+  - RetryFailedMessageHandler for retrying failed messages
+- Created corresponding message classes:
+  - TrackEmailMessage for email tracking events
+  - RetryFailedMessage for retry operations
+- Complete message handling infrastructure for async processing
+
+### Fixed
+- Resolved MessengerPass error for missing TrackEmailMessageHandler
+- Fixed service configuration to use actual implemented classes
+- Proper dependency injection for all message handlers
+- Cleaned up corrupted commands.yaml configuration
+
 ## [0.1.4] - 2025-09-19
 
 ### Fixed
