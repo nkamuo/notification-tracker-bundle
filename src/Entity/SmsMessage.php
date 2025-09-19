@@ -100,4 +100,16 @@ class SmsMessage extends Message
         $this->encoding = $encoding;
         return $this;
     }
+
+    public function getSubject(): ?string
+    {
+        // For SMS, use the message content as subject if available
+        if ($this->content && $this->content->getBodyText()) {
+            $text = $this->content->getBodyText();
+            // Return first 50 characters as subject
+            return strlen($text) > 50 ? substr($text, 0, 47) . '...' : $text;
+        }
+        
+        return 'SMS Message';
+    }
 }

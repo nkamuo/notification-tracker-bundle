@@ -47,11 +47,15 @@ use Symfony\Component\Validator\Constraints as Assert;
     operations: [
         new GetCollection(
             uriTemplate: '/notification-tracker/messages',
-            normalizationContext: ['groups' => ['message:list']]
+            normalizationContext: ['groups' => ['message:list']],
+            paginationItemsPerPage: 25,
+            paginationMaximumItemsPerPage: 100,
+            paginationPartial: true
         ),
         new Get(
             uriTemplate: '/notification-tracker/messages/{id}',
-            requirements: ['id' => '[0-9A-HJKMNP-TV-Z]{26}']
+            requirements: ['id' => '[0-9A-HJKMNP-TV-Z]{26}'],
+            normalizationContext: ['groups' => ['message:detail']]
         ),
         new Post(
             uriTemplate: '/notification-tracker/messages/{id}/retry',
@@ -74,7 +78,10 @@ use Symfony\Component\Validator\Constraints as Assert;
 #[ApiFilter(SearchFilter::class, properties: [
     'status' => 'exact',
     'type' => 'exact',
-    'transportName' => 'partial'
+    'transportName' => 'partial',
+    'subject' => 'partial',
+    'notification.type' => 'exact',
+    'notification.subject' => 'partial'
 ])]
 #[ApiFilter(DateFilter::class, properties: ['createdAt', 'sentAt'])]
 #[ApiFilter(OrderFilter::class, properties: ['createdAt', 'sentAt', 'status'], arguments: ['orderParameterName' => 'order'])]
@@ -111,66 +118,66 @@ abstract class Message
     protected string $status = self::STATUS_PENDING;
 
     #[ORM\Column(length: 100, nullable: true)]
-    #[Groups(['message:read', 'message:write'])]
+    #[Groups(['message:read', 'message:write', 'message:list'])]
     protected ?string $transportName = null;
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
-    #[Groups(['message:read'])]
+    #[Groups(['message:read', 'message:detail'])]
     protected ?string $transportDsn = null;
 
     #[ORM\Column(type: Types::JSON)]
-    #[Groups(['message:read', 'message:write'])]
+    #[Groups(['message:read', 'message:write', 'message:detail'])]
     protected array $metadata = [];
 
     #[ORM\Column(type: Types::DATETIME_IMMUTABLE)]
-    #[Groups(['message:read', 'message:list'])]
+    #[Groups(['message:read', 'message:list', 'message:detail'])]
     protected \DateTimeImmutable $createdAt;
 
     #[ORM\Column(type: Types::DATETIME_IMMUTABLE, nullable: true)]
-    #[Groups(['message:read'])]
+    #[Groups(['message:read', 'message:detail'])]
     protected ?\DateTimeImmutable $updatedAt = null;
 
     #[ORM\Column(type: Types::DATETIME_IMMUTABLE, nullable: true)]
-    #[Groups(['message:read', 'message:write'])]
+    #[Groups(['message:read', 'message:write', 'message:list'])]
     protected ?\DateTimeImmutable $scheduledAt = null;
 
     #[ORM\Column(type: Types::DATETIME_IMMUTABLE, nullable: true)]
-    #[Groups(['message:read', 'message:list'])]
+    #[Groups(['message:read', 'message:list', 'message:detail'])]
     protected ?\DateTimeImmutable $sentAt = null;
 
     #[ORM\Column(type: Types::INTEGER)]
-    #[Groups(['message:read'])]
+    #[Groups(['message:read', 'message:list'])]
     protected int $retryCount = 0;
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
-    #[Groups(['message:read'])]
+    #[Groups(['message:read', 'message:list'])]
     protected ?string $failureReason = null;
 
     #[ORM\ManyToOne(targetEntity: Notification::class, inversedBy: 'messages')]
     #[ORM\JoinColumn(nullable: true, onDelete: 'SET NULL')]
-    #[Groups(['message:read'])]
+    #[Groups(['message:read', 'message:list'])]
     protected ?Notification $notification = null;
 
     #[ORM\ManyToOne(targetEntity: MessageTemplate::class)]
     #[ORM\JoinColumn(nullable: true, onDelete: 'SET NULL')]
-    #[Groups(['message:read'])]
+    #[Groups(['message:read', 'message:detail'])]
     protected ?MessageTemplate $template = null;
 
     #[ORM\OneToOne(targetEntity: MessageContent::class, mappedBy: 'message', cascade: ['persist', 'remove'], orphanRemoval: true)]
-    #[Groups(['message:read'])]
+    #[Groups(['message:detail'])]
     protected ?MessageContent $content = null;
 
     #[ORM\OneToMany(targetEntity: MessageRecipient::class, mappedBy: 'message', cascade: ['persist', 'remove'], orphanRemoval: true)]
-    #[Groups(['message:read'])]
+    #[Groups(['message:detail'])]
     protected Collection $recipients;
 
     #[ORM\OneToMany(targetEntity: MessageEvent::class, mappedBy: 'message', cascade: ['persist', 'remove'], orphanRemoval: true)]
     #[ORM\OrderBy(['occurredAt' => 'DESC'])]
-    #[Groups(['message:read'])]
+    #[Groups(['message:detail'])]
     protected Collection $events;
 
     #[ORM\OneToMany(targetEntity: MessageAttachment::class, mappedBy: 'message', cascade: ['persist', 'remove'], orphanRemoval: true)]
-    #[Groups(['message:read'])]
+    #[Groups(['message:detail'])]
     protected Collection $attachments;
 
     public function __construct()
@@ -405,5 +412,121 @@ abstract class Message
         return $this;
     }
 
+    /**
+     * Get message type (used for API serialization)
+     */
+    #[Groups(['message:list', 'message:detail'])]
+    public function getMessageType(): string
+    {
+        return $this->getType();
+    }
+
+    /**
+     * Get total recipient count
+     */
+    #[Groups(['message:list', 'message:detail'])]
+    public function getRecipientCount(): int
+    {
+        return $this->recipients->count();
+    }
+
+    /**
+     * Get engagement statistics
+     */
+    #[Groups(['message:list', 'message:detail'])]
+    public function getEngagementStats(): array
+    {
+        $stats = [
+            'total_recipients' => $this->recipients->count(),
+            'opened' => 0,
+            'clicked' => 0,
+            'bounced' => 0,
+            'total_opens' => 0,
+            'total_clicks' => 0,
+        ];
+
+        foreach ($this->recipients as $recipient) {
+            if ($recipient->getOpenedAt()) {
+                $stats['opened']++;
+            }
+            if ($recipient->getClickedAt()) {
+                $stats['clicked']++;
+            }
+            if ($recipient->getBouncedAt()) {
+                $stats['bounced']++;
+            }
+            $stats['total_opens'] += $recipient->getOpenCount();
+            $stats['total_clicks'] += $recipient->getClickCount();
+        }
+
+        return $stats;
+    }
+
+    /**
+     * Get primary recipient address
+     */
+    #[Groups(['message:list', 'message:detail'])]
+    public function getPrimaryRecipient(): ?string
+    {
+        foreach ($this->recipients as $recipient) {
+            if ($recipient->getType() === MessageRecipient::TYPE_TO) {
+                return $recipient->getAddress();
+            }
+        }
+        return $this->recipients->first() ? $this->recipients->first()->getAddress() : null;
+    }
+
+    /**
+     * Get short subject for list views
+     */
+    #[Groups(['message:list'])]
+    public function getShortSubject(): ?string
+    {
+        $subject = $this->getSubject();
+        if ($subject && strlen($subject) > 80) {
+            return substr($subject, 0, 77) . '...';
+        }
+        return $subject;
+    }
+
+    /**
+     * Get the latest event information
+     */
+    #[Groups(['message:list', 'message:detail'])]
+    public function getLatestEvent(): ?array
+    {
+        $latestEvent = $this->events->first();
+        if (!$latestEvent) {
+            return null;
+        }
+
+        return [
+            'type' => $latestEvent->getEventType(),
+            'occurred_at' => $latestEvent->getOccurredAt(),
+            'metadata' => $latestEvent->getMetadata(),
+        ];
+    }
+
+    /**
+     * Get notification summary for message list
+     */
+    #[Groups(['message:list'])]
+    public function getNotificationSummary(): ?array
+    {
+        if (!$this->notification) {
+            return null;
+        }
+
+        return [
+            'id' => (string) $this->notification->getId(),
+            'type' => $this->notification->getType(),
+            'subject' => $this->notification->getSubject(),
+            'importance' => $this->notification->getImportance(),
+        ];
+    }
+
     abstract public function getType(): string;
+
+    // Abstract method for getting subject (to be implemented by concrete classes)
+    abstract public function getSubject(): ?string;
 }

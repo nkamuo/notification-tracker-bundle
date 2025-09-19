@@ -159,4 +159,10 @@ class PushMessage extends Message
         $this->provider = $provider;
         return $this;
     }
+
+    public function getSubject(): ?string
+    {
+        // For push notifications, use the title as subject
+        return $this->title;
+    }
 }

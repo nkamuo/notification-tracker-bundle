@@ -99,4 +99,16 @@ class TelegramMessage extends Message
         $this->replyMarkup = $replyMarkup;
         return $this;
     }
+
+    public function getSubject(): ?string
+    {
+        // For Telegram, use the message content as subject if available
+        if ($this->content && $this->content->getBodyText()) {
+            $text = $this->content->getBodyText();
+            // Return first 50 characters as subject
+            return strlen($text) > 50 ? substr($text, 0, 47) . '...' : $text;
+        }
+        
+        return "Telegram message to {$this->chatId}";
+    }
 }
