@@ -82,13 +82,14 @@ class MessageTracker
         // Handle attachments
         $this->handleEmailAttachments($message, $email);
         
-        // Add initial event
+        // Persist the message first before adding events
+        $this->entityManager->persist($message);
+        $this->entityManager->flush();
+        
+        // Add initial event after message is persisted
         $this->addEvent($message, MessageEvent::TYPE_QUEUED, [
             'transport' => $transportName,
         ]);
-
-        $this->entityManager->persist($message);
-        $this->entityManager->flush();
         
         // Dispatch event
         $this->eventDispatcher->dispatch(new MessageTrackedEvent($message));
@@ -133,13 +134,14 @@ class MessageTracker
         $segments = ceil($textLength / 160);
         $message->setSegmentsCount((int)$segments);
 
-        // Add initial event
+        // Persist the message first before adding events
+        $this->entityManager->persist($message);
+        $this->entityManager->flush();
+
+        // Add initial event after message is persisted
         $this->addEvent($message, MessageEvent::TYPE_QUEUED, [
             'transport' => $transportName,
         ]);
-
-        $this->entityManager->persist($message);
-        $this->entityManager->flush();
         
         $this->eventDispatcher->dispatch(new MessageTrackedEvent($message));
 
@@ -171,14 +173,15 @@ class MessageTracker
             $message->setContent($content);
         }
         
-        // Add initial event
+        // Persist the message first before adding events
+        $this->entityManager->persist($message);
+        $this->entityManager->flush();
+        
+        // Add initial event after message is persisted
         $this->addEvent($message, MessageEvent::TYPE_QUEUED, [
             'transport' => $transportName,
             'channel' => $channelType,
         ]);
-
-        $this->entityManager->persist($message);
-        $this->entityManager->flush();
         
         $this->eventDispatcher->dispatch(new MessageTrackedEvent($message));
 
