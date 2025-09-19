@@ -33,6 +33,7 @@
 
 ### 📋 REST API Reference
 - **[Complete API Documentation](API-DOCUMENTATION.md)** - Full REST API reference
+- **[Analytics & Performance Intelligence](ANALYTICS-DOCUMENTATION.md)** - Comprehensive analytics endpoints and UI implementation
 - **[OpenAPI Specification](openapi.yaml)** - Machine-readable API schema
 - **[Postman Collection](https://www.postman.com/collections/notification-tracker-api)** - Ready-to-use API collection
 
@@ -40,7 +41,10 @@
 - **GET /notifications** - List notifications with pagination
 - **POST /notifications** - Create rich multi-channel notifications  
 - **GET /messages** - Browse message details and status
-- **GET /statistics/dashboard** - Analytics and performance metrics
+- **GET /analytics/dashboard** - Comprehensive performance analytics
+- **GET /analytics/channels** - Channel performance breakdown
+- **GET /analytics/trends** - Time-series analysis and forecasting
+- **GET /analytics/failures** - Failure analysis and diagnostics
 
 ---
 
@@ -64,8 +68,11 @@
 
 ### 📊 Analytics & Monitoring
 - **Dashboard Statistics** - Real-time performance metrics
+- **Channel Performance Analysis** - Per-channel analytics and optimization
 - **Engagement Tracking** - Open rates, click rates, delivery stats
-- **Channel Performance** - Per-channel analytics and costs
+- **Failure Analysis & Diagnostics** - Root cause analysis and recommendations
+- **Cost Analytics** - Financial tracking and budget optimization
+- **Trend Analysis & Forecasting** - Historical patterns and predictions
 - **Custom Events** - Track user interactions and behaviors
 
 ### 🔄 Real-time Features

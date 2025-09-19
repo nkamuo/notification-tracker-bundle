@@ -94,7 +94,22 @@ class NotificationTrackerAPI {
 
   // Analytics
   async getDashboardStats(period: string = '30d'): Promise<DashboardStats> {
-    const response = await this.client.get('/statistics/dashboard', { params: { period } });
+    const response = await this.client.get('/analytics/dashboard', { params: { period } });
+    return response.data;
+  }
+
+  async getChannelAnalytics(period: string = '30d', compare: boolean = false): Promise<ChannelAnalytics> {
+    const response = await this.client.get('/analytics/channels', { params: { period, compare } });
+    return response.data;
+  }
+
+  async getTrendsAnalytics(period: string = '30d', granularity: string = 'day'): Promise<TrendsAnalytics> {
+    const response = await this.client.get('/analytics/trends', { params: { period, granularity } });
+    return response.data;
+  }
+
+  async getFailureAnalytics(period: string = '30d', channel?: string): Promise<FailureAnalytics> {
+    const response = await this.client.get('/analytics/failures', { params: { period, channel } });
     return response.data;
   }
 
