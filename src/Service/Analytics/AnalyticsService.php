@@ -95,7 +95,7 @@ class AnalyticsService
             ->select('m.status, COUNT(m.id) as count, 
                      AVG(CASE WHEN m.sentAt IS NOT NULL THEN 
                          EXTRACT(EPOCH FROM (m.sentAt - m.createdAt)) 
-                     END) as avgDeliveryTime')
+                     ELSE NULL END) as avgDeliveryTime')
             ->from('Nkamuo\NotificationTrackerBundle\Entity\Message', 'm')
             ->where('m.type = :channel')
             ->andWhere('m.createdAt >= :startDate')
@@ -348,10 +348,10 @@ class AnalyticsService
         // Engagement statistics
         $engagementStats = $this->entityManager->createQueryBuilder()
             ->select('
-                COUNT(DISTINCT CASE WHEN e.type = :opened THEN r.id END) as uniqueOpens,
-                COUNT(DISTINCT CASE WHEN e.type = :clicked THEN r.id END) as uniqueClicks,
-                COUNT(CASE WHEN e.type = :opened THEN 1 END) as totalOpens,
-                COUNT(CASE WHEN e.type = :clicked THEN 1 END) as totalClicks
+                COUNT(DISTINCT CASE WHEN e.type = :opened THEN r.id ELSE NULL END) as uniqueOpens,
+                COUNT(DISTINCT CASE WHEN e.type = :clicked THEN r.id ELSE NULL END) as uniqueClicks,
+                COUNT(CASE WHEN e.type = :opened THEN 1 ELSE NULL END) as totalOpens,
+                COUNT(CASE WHEN e.type = :clicked THEN 1 ELSE NULL END) as totalClicks
             ')
             ->from('Nkamuo\NotificationTrackerBundle\Entity\MessageEvent', 'e')
             ->join('e.recipient', 'r')
