@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.6] - 2025-09-19
+
+### Fixed
+- Fixed service configuration parameter mismatches in tracking.yaml
+- Corrected AttachmentManager constructor parameter from $maxAttachmentSize to $maxSize
+- Fixed MessageRetryService constructor parameters to match actual implementation
+- Updated WebhookProcessor service configuration with all required parameters
+- Fixed MessageTracker service configuration with proper dependencies
+- Corrected NotificationTracker service configuration
+- Resolves ResolveNamedArgumentsPass error during service container compilation
+
+### Improved
+- All service configurations now match actual constructor signatures
+- Proper dependency injection for all tracking services
+- Complete service parameter mapping
+
 ## [0.1.5] - 2025-09-19
 
 ### Added

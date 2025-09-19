@@ -1,0 +1,52 @@
+services:
+    _defaults:
+        autowire: true
+        autoconfigure: true
+        public: true
+
+    Nkamuo\NotificationTrackerBundle\:
+        resource: '../../src/*'
+        exclude:
+            - '../../src/{DependencyInjection,Entity,Resources,Tests}'
+            - '../../src/NotificationTrackerBundle.php'
+        public: true
+
+    # Override specific services that need custom configuration
+    Nkamuo\NotificationTrackerBundle\Service\MessageTracker:
+        public: true
+        arguments:
+            $entityManager: '@doctrine.orm.entity_manager'
+            $eventDispatcher: '@event_dispatcher'
+            $logger: '@logger'
+            $messageRepository: '@Nkamuo\NotificationTrackerBundle\Repository\MessageRepository'
+            $attachmentManager: '@Nkamuo\NotificationTrackerBundle\Service\AttachmentManager'
+            $storeContent: false
+
+    Nkamuo\NotificationTrackerBundle\Service\NotificationTracker:
+        public: true
+        arguments:
+            $entityManager: '@doctrine.orm.entity_manager'
+            $eventDispatcher: '@event_dispatcher'
+            $logger: '@logger'
+
+    Nkamuo\NotificationTrackerBundle\Service\AttachmentManager:
+        public: true
+        arguments:
+            $logger: '@logger'
+            $attachmentDirectory: '%kernel.cache_dir%/attachments'
+            $maxAttachmentSize: 10485760
+
+    Nkamuo\NotificationTrackerBundle\Service\MessageRetryService:
+        public: true
+        arguments:
+            $entityManager: '@doctrine.orm.entity_manager'
+            $logger: '@logger'
+            $maxRetries: 3
+            $retryDelay: 1000
+            $retryMultiplier: 2
+
+    Nkamuo\NotificationTrackerBundle\Service\WebhookProcessor:
+        public: true
+        arguments:
+            $entityManager: '@doctrine.orm.entity_manager'
+            $logger: '@logger'

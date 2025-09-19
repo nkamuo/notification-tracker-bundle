@@ -65,26 +65,40 @@ class NotificationTrackerExtension extends Extension implements PrependExtension
     
     public function prepend(ContainerBuilder $container): void
     {
-        // Prepend doctrine configuration
-        $container->prependExtensionConfig('doctrine', [
-            'orm' => [
-                'mappings' => [
-                    'NotificationTrackerBundle' => [
-                        'type' => 'attribute',
-                        'dir' => '%kernel.project_dir%/vendor/nkamuo/notification-tracker-bundle/src/Entity',
-                        'prefix' => 'Nkamuo\NotificationTrackerBundle\Entity',
-                        'alias' => 'NotificationTracker',
+        // Detect if we're running from the bundle itself (for development/testing)
+        $kernelProjectDir = $container->getParameter('kernel.project_dir');
+        $bundleDir = dirname(__DIR__, 2); // Go up from src/DependencyInjection to bundle root
+        
+        // If we're running from the bundle itself, use a different entity path
+        if (realpath($kernelProjectDir) === realpath($bundleDir)) {
+            // We're in development/test mode - don't prepend doctrine config
+            // as it will be handled by the test kernel
+        } else {
+            // We're installed as a vendor package
+            $container->prependExtensionConfig('doctrine', [
+                'orm' => [
+                    'mappings' => [
+                        'NotificationTrackerBundle' => [
+                            'type' => 'attribute',
+                            'dir' => '%kernel.project_dir%/vendor/nkamuo/notification-tracker-bundle/src/Entity',
+                            'prefix' => 'Nkamuo\NotificationTrackerBundle\Entity',
+                            'alias' => 'NotificationTracker',
+                        ],
                     ],
                 ],
-            ],
-        ]);
+            ]);
+        }
         
         // Prepend API Platform configuration if enabled
         if ($container->hasExtension('api_platform')) {
+            $entityPath = (realpath($kernelProjectDir) === realpath($bundleDir)) 
+                ? '%kernel.project_dir%/src/Entity'
+                : '%kernel.project_dir%/vendor/nkamuo/notification-tracker-bundle/src/Entity';
+                
             $container->prependExtensionConfig('api_platform', [
                 'mapping' => [
                     'paths' => [
-                        '%kernel.project_dir%/vendor/nkamuo/notification-tracker-bundle/src/Entity',
+                        $entityPath,
                     ],
                 ],
             ]);
