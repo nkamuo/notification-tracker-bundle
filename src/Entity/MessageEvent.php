@@ -182,4 +182,12 @@ class MessageEvent
     {
         return $this->eventType === self::TYPE_QUEUED;
     }
+
+    /**
+     * Alias for getEventData() to maintain compatibility
+     */
+    public function getMetadata(): array
+    {
+        return $this->eventData;
+    }
 }
