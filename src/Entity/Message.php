@@ -18,6 +18,8 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Nkamuo\NotificationTrackerBundle\Repository\MessageRepository;
+use Nkamuo\NotificationTrackerBundle\Controller\Api\RetryMessageController;
+use Nkamuo\NotificationTrackerBundle\Controller\Api\CancelMessageController;
 use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Uid\Ulid;
 use Symfony\Component\Validator\Constraints as Assert;
