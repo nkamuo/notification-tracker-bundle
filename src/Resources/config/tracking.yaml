@@ -41,3 +41,9 @@ services:
             $verifySignatures: '%notification_tracker.webhooks.verify_signatures%'
         tags:
             - { name: monolog.logger, channel: notification_tracker_webhook }
+
+    Nkamuo\NotificationTrackerBundle\State\NotificationCreateProcessor:
+        arguments:
+            $entityManager: '@doctrine.orm.entity_manager'
+        tags:
+            - { name: monolog.logger, channel: notification_tracker }

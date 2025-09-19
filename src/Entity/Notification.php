@@ -8,6 +8,7 @@ use ApiPlatform\Metadata\ApiResource;
 use ApiPlatform\Metadata\ApiFilter;
 use ApiPlatform\Metadata\Get;
 use ApiPlatform\Metadata\GetCollection;
+use ApiPlatform\Metadata\Post;
 use ApiPlatform\Doctrine\Orm\Filter\SearchFilter;
 use ApiPlatform\Doctrine\Orm\Filter\DateFilter;
 use ApiPlatform\Doctrine\Orm\Filter\OrderFilter;
@@ -41,6 +42,12 @@ use Symfony\Component\Uid\Ulid;
             requirements: ['id' => '[0-9A-HJKMNP-TV-Z]{26}'],
             normalizationContext: ['groups' => ['notification:detail']]
         ),
+        new Post(
+            uriTemplate: ApiRoutes::NOTIFICATIONS,
+            denormalizationContext: ['groups' => ['notification:create']],
+            normalizationContext: ['groups' => ['notification:detail']],
+            processor: 'Nkamuo\NotificationTrackerBundle\State\NotificationCreateProcessor'
+        ),
     ]
 )]
 #[ApiFilter(SearchFilter::class, properties: ['type' => 'exact', 'importance' => 'exact', 'subject' => 'partial'])]
@@ -59,28 +66,40 @@ class Notification
     private Ulid $id;
 
     #[ORM\Column(length: 100)]
-    #[Groups(['notification:read', 'notification:list', 'notification:write'])]
+    #[Groups(['notification:read', 'notification:list', 'notification:write', 'notification:create'])]
     private string $type;
 
     #[ORM\Column(length: 20)]
-    #[Groups(['notification:read', 'notification:list', 'notification:write'])]
+    #[Groups(['notification:read', 'notification:list', 'notification:write', 'notification:create'])]
     private string $importance = self::IMPORTANCE_NORMAL;
 
     #[ORM\Column(type: Types::JSON)]
-    #[Groups(['notification:read', 'notification:write', 'notification:list', 'notification:detail'])]
+    #[Groups(['notification:read', 'notification:write', 'notification:list', 'notification:detail', 'notification:create'])]
     private array $channels = [];
 
     #[ORM\Column(type: Types::JSON)]
-    #[Groups(['notification:read', 'notification:write', 'notification:detail'])]
+    #[Groups(['notification:read', 'notification:write', 'notification:detail', 'notification:create'])]
     private array $context = [];
 
     #[ORM\Column(type: 'ulid', nullable: true)]
-    #[Groups(['notification:read', 'notification:write', 'notification:list', 'notification:detail'])]
+    #[Groups(['notification:read', 'notification:write', 'notification:list', 'notification:detail', 'notification:create'])]
     private ?Ulid $userId = null;
 
     #[ORM\Column(type: Types::STRING, length: 255, nullable: true)]
-    #[Groups(['notification:read', 'notification:write', 'notification:list', 'notification:detail'])]
+    #[Groups(['notification:read', 'notification:write', 'notification:list', 'notification:detail', 'notification:create'])]
     private ?string $subject = null;
+
+    #[ORM\Column(type: Types::JSON, nullable: true)]
+    #[Groups(['notification:create', 'notification:detail'])]
+    private ?array $recipients = null;
+
+    #[ORM\Column(type: Types::TEXT, nullable: true)]
+    #[Groups(['notification:create', 'notification:detail'])]
+    private ?string $content = null;
+
+    #[ORM\Column(type: Types::JSON, nullable: true)]
+    #[Groups(['notification:create', 'notification:detail'])]
+    private ?array $channelSettings = null;
 
     #[ORM\Column(type: Types::DATETIME_IMMUTABLE)]
     #[Groups(['notification:read', 'notification:list'])]
@@ -165,6 +184,39 @@ class Notification
     public function setSubject(?string $subject): self
     {
         $this->subject = $subject;
+        return $this;
+    }
+
+    public function getRecipients(): ?array
+    {
+        return $this->recipients;
+    }
+
+    public function setRecipients(?array $recipients): self
+    {
+        $this->recipients = $recipients;
+        return $this;
+    }
+
+    public function getContent(): ?string
+    {
+        return $this->content;
+    }
+
+    public function setContent(?string $content): self
+    {
+        $this->content = $content;
+        return $this;
+    }
+
+    public function getChannelSettings(): ?array
+    {
+        return $this->channelSettings;
+    }
+
+    public function setChannelSettings(?array $channelSettings): self
+    {
+        $this->channelSettings = $channelSettings;
         return $this;
     }
 
