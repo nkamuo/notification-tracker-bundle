@@ -45,6 +45,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.13] - 2025-09-19
+
+### Improved
+- Enhanced entity relationship cascade and orphan removal settings
+- Added `orphanRemoval: true` to all OneToMany and OneToOne relationships
+- Ensures proper data cleanup when parent entities are deleted
+- Prevents orphaned records in database improving data integrity
+
+### Entity Relationship Improvements
+- **Message → MessageRecipient**: cascade + orphanRemoval
+- **Message → MessageEvent**: cascade + orphanRemoval  
+- **Message → MessageAttachment**: cascade + orphanRemoval
+- **Message → MessageContent**: cascade + orphanRemoval
+- **MessageRecipient → MessageEvent**: cascade + orphanRemoval
+- **Notification → Message**: cascade + orphanRemoval
+
+### Database Benefits
+- Automatic cleanup of related data when entities are deleted
+- Better referential integrity
+- Cleaner database state management
+- Prevents accumulation of orphaned records
+
 ## [0.1.12] - 2025-09-19
 
 ### Added
