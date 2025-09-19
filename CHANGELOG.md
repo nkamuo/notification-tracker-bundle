@@ -45,6 +45,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.14] - 2025-09-19
+
+### Fixed
+- Fixed cascade persist issue in MessageTracker service
+- Reordered operations in `trackEmail`, `trackSms`, and `trackChat` methods
+- Message entities are now persisted before adding events to prevent cascade persist errors
+- Resolves "A new entity was found through the relationship" error during auto-tracking
+- Ensures proper entity persistence order for related entities
+
+### Technical Details
+- **Root Cause**: `addEvent()` was called before `persist()`, causing MessageEvent to reference a non-persisted Message entity
+- **Solution**: Message is now persisted first, then events are added safely
+- **Impact**: Auto-tracking feature now works correctly with `mailer:test` and direct Mailer usage
+
+### Affected Methods
+- `MessageTracker::trackEmail()` - Fixed persistence order
+- `MessageTracker::trackSms()` - Fixed persistence order  
+- `MessageTracker::trackChat()` - Fixed persistence order
+
 ## [0.1.13] - 2025-09-19
 
 ### Improved
