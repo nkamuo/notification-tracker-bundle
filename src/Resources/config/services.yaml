@@ -9,10 +9,10 @@ services:
             - '../../{DependencyInjection,Entity,Resources,Tests}'
             - '../../NotificationTrackerBundle.php'
 
-    # Core Services
+    # Core Services with proper logger configuration
     Nkamuo\NotificationTrackerBundle\Service\MessageTracker:
-        arguments:
-            $logger: '@monolog.logger.notification_tracker'
+        tags:
+            - { name: monolog.logger, channel: notification_tracker }
 
     # Remove repository services - they're auto-configured by Doctrine
     # Just ensure they're tagged properly in the Entity annotations

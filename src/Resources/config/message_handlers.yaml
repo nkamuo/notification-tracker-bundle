@@ -1,13 +1,13 @@
 services:
     # Message Handlers - Use AsMessageHandler attribute for auto-configuration
     Nkamuo\NotificationTrackerBundle\MessageHandler\TrackEmailMessageHandler:
-        arguments:
-            $logger: '@monolog.logger.notification_tracker'
+        tags:
+            - { name: monolog.logger, channel: notification_tracker }
 
     Nkamuo\NotificationTrackerBundle\MessageHandler\ProcessWebhookMessageHandler:
-        arguments:
-            $logger: '@monolog.logger.notification_tracker.webhook'
+        tags:
+            - { name: monolog.logger, channel: notification_tracker_webhook }
 
     Nkamuo\NotificationTrackerBundle\MessageHandler\RetryFailedMessageHandler:
-        arguments:
-            $logger: '@monolog.logger.notification_tracker.retry'
+        tags:
+            - { name: monolog.logger, channel: notification_tracker_retry }

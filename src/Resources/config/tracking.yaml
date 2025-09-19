@@ -4,19 +4,19 @@ services:
         arguments:
             $entityManager: '@doctrine.orm.entity_manager'
             $eventDispatcher: '@event_dispatcher'
-            $logger: '@monolog.logger.notification_tracker'
             $messageRepository: '@Nkamuo\NotificationTrackerBundle\Repository\MessageRepository'
             $attachmentManager: '@Nkamuo\NotificationTrackerBundle\Service\AttachmentManager'
             $storeContent: '%notification_tracker.tracking.store_content%'
         tags:
             - { name: 'notification_tracker.message_tracker' }
+            - { name: monolog.logger, channel: notification_tracker }
 
     Nkamuo\NotificationTrackerBundle\Service\NotificationTracker:
         arguments:
             $entityManager: '@doctrine.orm.entity_manager'
-            $logger: '@monolog.logger.notification_tracker'
         tags:
             - { name: 'notification_tracker.notification_tracker' }
+            - { name: monolog.logger, channel: notification_tracker }
 
     Nkamuo\NotificationTrackerBundle\Service\AttachmentManager:
         arguments:
@@ -29,13 +29,15 @@ services:
             $messageBus: '@messenger.bus.default'
             $entityManager: '@doctrine.orm.entity_manager'
             $messageTracker: '@Nkamuo\NotificationTrackerBundle\Service\MessageTracker'
-            $logger: '@monolog.logger.notification_tracker'
+        tags:
+            - { name: monolog.logger, channel: notification_tracker }
 
     Nkamuo\NotificationTrackerBundle\Service\WebhookProcessor:
         arguments:
             $entityManager: '@doctrine.orm.entity_manager'
             $messageTracker: '@Nkamuo\NotificationTrackerBundle\Service\MessageTracker'
-            $logger: '@monolog.logger.notification_tracker.webhook'
             $messageBus: '@messenger.bus.default'
             $asyncProcessing: '%notification_tracker.webhooks.async_processing%'
             $verifySignatures: '%notification_tracker.webhooks.verify_signatures%'
+        tags:
+            - { name: monolog.logger, channel: notification_tracker_webhook }

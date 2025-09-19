@@ -2,10 +2,10 @@ services:
     # Event Subscribers - Only include existing classes
     Nkamuo\NotificationTrackerBundle\EventSubscriber\MailerEventSubscriber:
         arguments:
-            $logger: '@monolog.logger.notification_tracker.mailer'
             $enabled: '%notification_tracker.tracking.enabled%'
         tags:
             - { name: kernel.event_subscriber }
+            - { name: monolog.logger, channel: notification_tracker_mailer }
 
     # Additional event subscribers commented out until implemented:
     # Nkamuo\NotificationTrackerBundle\EventSubscriber\NotifierEventSubscriber:
