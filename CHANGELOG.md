@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.15] - 2025-09-19
+
+### Added
+- **Auto-Notification Creation**: Automatic Notification entity creation for unified tracking
+- **Unified Entry Point**: All messages now captured under Notification entities for consistent access
+- **Enhanced MessageTracker**: Auto-creates notifications when none provided in trackEmail, trackSms, trackChat methods
+- **Backward Compatibility**: Maintains existing notification parameter support while adding auto-creation
+- **Comprehensive Metadata**: Auto-generated notifications include detailed context and source information
+- **Smart Naming**: Intelligent subject/title generation for auto-created notifications based on message content
+
+### Changed
+- Enhanced `trackEmail()` method to auto-create notifications for direct mailer usage
+- Enhanced `trackSms()` method to auto-create notifications for direct SMS usage  
+- Enhanced `trackChat()` method to auto-create notifications for direct chat usage
+- Improved logging for auto-notification creation with detailed context
+
+### Technical Details
+- Added `createAutoNotification()` private method for consistent notification creation
+- Added `generateAutoNotificationSubject()` for intelligent notification naming
+- Auto-notifications tagged with `type: 'auto_generated'` for easy identification
+- Preserves original context and source information in notification metadata
+
 ## [1.0.0] - 2025-09-19
 
 🎉 **First Stable Release** - Complete notification tracker bundle with full production-ready functionality!
