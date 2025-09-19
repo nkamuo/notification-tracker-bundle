@@ -131,8 +131,8 @@ class MessageTracker
         // Calculate segments
         $textLength = strlen($sms->getSubject());
         $segments = ceil($textLength / 160);
-        $message->setSegmentsCount($segments);
-        
+        $message->setSegmentsCount((int)$segments);
+
         // Add initial event
         $this->addEvent($message, MessageEvent::TYPE_QUEUED, [
             'transport' => $transportName,
@@ -304,7 +304,13 @@ class MessageTracker
                 $message->setBlocks($options['blocks']);
             }
             if (isset($options['attachments'])) {
-                $message->setAttachments($options['attachments']);
+                // $message->setAttachments($options['attachments']);
+                foreach ($options['attachments'] as $attachmentData) {
+                    // Process each attachment data as needed
+                    // For now, just log or ignore
+                    $this->logger->info('Slack attachment data received', ['attachment' => $attachmentData]);
+                    $message->addAttachment($attachmentData);
+                }
             }
         }
         

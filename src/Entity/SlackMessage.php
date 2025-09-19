@@ -7,9 +7,10 @@ namespace Nkamuo\NotificationTrackerBundle\Entity;
 use ApiPlatform\Metadata\ApiResource;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Nkamuo\NotificationTrackerBundle\Repository\SlackMessageRepository;
 use Symfony\Component\Serializer\Annotation\Groups;
 
-#[ORM\Entity]
+#[ORM\Entity(repositoryClass: SlackMessageRepository::class)]
 #[ORM\Table(name: 'notification_tracker_slack_messages')]
 #[ApiResource(
     shortName: 'SlackMessage',
@@ -30,10 +31,6 @@ class SlackMessage extends Message
     #[ORM\Column(type: Types::JSON, nullable: true)]
     #[Groups(['slack:read', 'slack:write'])]
     private ?array $blocks = null;
-
-    #[ORM\Column(type: Types::JSON, nullable: true)]
-    #[Groups(['slack:read', 'slack:write'])]
-    private ?array $attachments = null;
 
     public function getType(): string
     {
@@ -73,14 +70,4 @@ class SlackMessage extends Message
         return $this;
     }
 
-    public function getAttachments(): ?array
-    {
-        return $this->attachments;
-    }
-
-    public function setAttachments(?array $attachments): self
-    {
-        $this->attachments = $attachments;
-        return $this;
-    }
 }

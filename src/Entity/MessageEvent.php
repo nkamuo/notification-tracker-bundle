@@ -175,4 +175,10 @@ class MessageEvent
         $this->webhookPayload = $webhookPayload;
         return $this;
     }
+
+
+    public function isQueued(): bool
+    {
+        return $this->eventType === self::TYPE_QUEUED;
+    }
 }

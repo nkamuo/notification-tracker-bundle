@@ -7,9 +7,10 @@ namespace Nkamuo\NotificationTrackerBundle\Entity;
 use ApiPlatform\Metadata\ApiResource;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Nkamuo\NotificationTrackerBundle\Repository\PushMessageRepository;
 use Symfony\Component\Serializer\Annotation\Groups;
 
-#[ORM\Entity]
+#[ORM\Entity(repositoryClass: PushMessageRepository::class)]
 #[ORM\Table(name: 'notification_tracker_push_messages')]
 #[ApiResource(
     shortName: 'PushMessage',

@@ -7,9 +7,10 @@ namespace Nkamuo\NotificationTrackerBundle\Entity;
 use ApiPlatform\Metadata\ApiResource;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Nkamuo\NotificationTrackerBundle\Repository\TelegramMessageRepository;
 use Symfony\Component\Serializer\Annotation\Groups;
 
-#[ORM\Entity]
+#[ORM\Entity(repositoryClass: TelegramMessageRepository::class)]
 #[ORM\Table(name: 'notification_tracker_telegram_messages')]
 #[ApiResource(
     shortName: 'TelegramMessage',

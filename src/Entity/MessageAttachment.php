@@ -6,11 +6,12 @@ namespace Nkamuo\NotificationTrackerBundle\Entity;
 
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Nkamuo\NotificationTrackerBundle\Repository\MessageAttachmentRepository;
 use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Uid\Ulid;
 use Symfony\Component\Validator\Constraints as Assert;
 
-#[ORM\Entity]
+#[ORM\Entity(repositoryClass: MessageAttachmentRepository::class)]
 #[ORM\Table(name: 'notification_tracker_message_attachments')]
 #[ORM\Index(name: 'idx_nt_attachment_message', columns: ['message_id'])]
 class MessageAttachment

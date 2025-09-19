@@ -7,10 +7,11 @@ namespace Nkamuo\NotificationTrackerBundle\Entity;
 use ApiPlatform\Metadata\ApiResource;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Nkamuo\NotificationTrackerBundle\Repository\EmailMessageRepository;
 use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Validator\Constraints as Assert;
 
-#[ORM\Entity]
+#[ORM\Entity(repositoryClass: EmailMessageRepository::class)]
 #[ORM\Table(name: 'notification_tracker_email_messages')]
 #[ApiResource(
     shortName: 'EmailMessage',

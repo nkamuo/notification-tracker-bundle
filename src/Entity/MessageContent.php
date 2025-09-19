@@ -6,10 +6,11 @@ namespace Nkamuo\NotificationTrackerBundle\Entity;
 
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Nkamuo\NotificationTrackerBundle\Repository\MessageContentRepository;
 use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Uid\Ulid;
 
-#[ORM\Entity]
+#[ORM\Entity(repositoryClass: MessageContentRepository::class)]
 #[ORM\Table(name: 'notification_tracker_message_contents')]
 class MessageContent
 {

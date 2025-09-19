@@ -8,10 +8,11 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Nkamuo\NotificationTrackerBundle\Repository\MessageRecipientRepository;
 use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Uid\Ulid;
 
-#[ORM\Entity]
+#[ORM\Entity(repositoryClass: MessageRecipientRepository::class)]
 #[ORM\Table(name: 'notification_tracker_message_recipients')]
 #[ORM\Index(name: 'idx_nt_recipient_message', columns: ['message_id'])]
 #[ORM\Index(name: 'idx_nt_recipient_status', columns: ['status'])]

@@ -23,7 +23,9 @@ class NotificationTracker
         $notification->setType('symfony_notification');
         $notification->setSubject($symfonyNotification->getSubject());
         $notification->setImportance($symfonyNotification->getImportance());
-        
+
+        // $recipients = $symfonyNotification->getRecipients();
+
         $channels = [];
         foreach ($symfonyNotification->getChannels() as $channel) {
             $channels[] = $channel;
