@@ -1,0 +1,20 @@
+services:
+    Nkamuo\NotificationTrackerBundle\EventSubscriber\MailerEventSubscriber:
+        arguments:
+            $logger: '@monolog.logger.notification_tracker.mailer'
+            $enabled: '%notification_tracker.tracking.enabled%'
+        tags:
+            - { name: kernel.event_subscriber }
+
+    Nkamuo\NotificationTrackerBundle\EventSubscriber\NotifierEventSubscriber:
+        arguments:
+            $logger: '@monolog.logger.notification_tracker.notifier'
+            $enabled: '%notification_tracker.tracking.enabled%'
+        tags:
+            - { name: kernel.event_subscriber }
+
+    Nkamuo\NotificationTrackerBundle\EventSubscriber\MessengerEventSubscriber:
+        arguments:
+            $logger: '@monolog.logger.notification_tracker.messenger'
+        tags:
+            - { name: kernel.event_subscriber }

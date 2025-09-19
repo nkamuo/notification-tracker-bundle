@@ -1,0 +1,18 @@
+services:
+    Nkamuo\NotificationTrackerBundle\MessageHandler\TrackEmailMessageHandler:
+        arguments:
+            $logger: '@monolog.logger.notification_tracker'
+        tags:
+            - { name: messenger.message_handler, priority: 100 }
+
+    Nkamuo\NotificationTrackerBundle\MessageHandler\ProcessWebhookMessageHandler:
+        arguments:
+            $logger: '@monolog.logger.notification_tracker.webhook'
+        tags:
+            - { name: messenger.message_handler }
+
+    Nkamuo\NotificationTrackerBundle\MessageHandler\RetryFailedMessageHandler:
+        arguments:
+            $logger: '@monolog.logger.notification_tracker.retry'
+        tags:
+            - { name: messenger.message_handler }

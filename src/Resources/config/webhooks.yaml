@@ -1,0 +1,25 @@
+services:
+    # Webhook Providers
+    Nkamuo\NotificationTrackerBundle\Webhook\Provider\SendGridWebhookProvider:
+        arguments:
+            $secret: '%env(SENDGRID_WEBHOOK_SECRET)%'
+        tags:
+            - { name: 'notification_tracker.webhook_provider', provider: 'sendgrid' }
+
+    Nkamuo\NotificationTrackerBundle\Webhook\Provider\TwilioWebhookProvider:
+        arguments:
+            $authToken: '%env(TWILIO_AUTH_TOKEN)%'
+        tags:
+            - { name: 'notification_tracker.webhook_provider', provider: 'twilio' }
+
+    Nkamuo\NotificationTrackerBundle\Webhook\Provider\MailgunWebhookProvider:
+        arguments:
+            $signingKey: '%env(MAILGUN_SIGNING_KEY)%'
+        tags:
+            - { name: 'notification_tracker.webhook_provider', provider: 'mailgun' }
+
+    Nkamuo\NotificationTrackerBundle\Webhook\Provider\MailchimpWebhookProvider:
+        arguments:
+            $secret: '%env(MAILCHIMP_WEBHOOK_SECRET)%'
+        tags:
+            - { name: 'notification_tracker.webhook_provider', provider: 'mailchimp' }

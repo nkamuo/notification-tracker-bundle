@@ -1,0 +1,17 @@
+services:
+    Nkamuo\NotificationTrackerBundle\Controller\Api\RetryMessageController:
+        tags: ['controller.service_arguments']
+
+    Nkamuo\NotificationTrackerBundle\Controller\Api\CancelMessageController:
+        tags: ['controller.service_arguments']
+
+    Nkamuo\NotificationTrackerBundle\Controller\Api\MessageAnalyticsController:
+        tags: ['controller.service_arguments']
+
+    Nkamuo\NotificationTrackerBundle\State\MessageStateProcessor:
+        tags:
+            - { name: 'api_platform.state_processor' }
+
+    Nkamuo\NotificationTrackerBundle\State\MessageStateProvider:
+        tags:
+            - { name: 'api_platform.state_provider' }

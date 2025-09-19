@@ -1,0 +1,62 @@
+{
+    "name": "nkamuo/notification-tracker-bundle",
+    "type": "symfony-bundle",
+    "description": "Notification and email tracking bundle for Symfony with webhook support",
+    "keywords": ["symfony", "bundle", "notification", "email", "tracking", "webhook", "mailer", "notifier"],
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "nkamuo",
+            "email": "callistus@anvila.tech"
+        }
+    ],
+    "require": {
+        "php": ">=8.2",
+        "symfony/framework-bundle": "^7.3",
+        "symfony/orm-pack": "^2.4",
+        "symfony/mailer": "^7.3",
+        "symfony/notifier": "^7.3",
+        "symfony/messenger": "^7.3",
+        "symfony/uid": "^7.3",
+        "symfony/validator": "^7.3",
+        "symfony/serializer": "^7.3",
+        "symfony/property-access": "^7.3",
+        "symfony/property-info": "^7.3",
+        "api-platform/core": "^3.3",
+        "doctrine/doctrine-bundle": "^2.11",
+        "doctrine/orm": "^3.0",
+        "symfony/twig-bundle": "^7.3",
+        "symfony/cache": "^7.3"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^10.5",
+        "symfony/phpunit-bridge": "^7.3",
+        "symfony/browser-kit": "^7.3",
+        "symfony/css-selector": "^7.3",
+        "symfony/debug-bundle": "^7.3",
+        "symfony/maker-bundle": "^1.52",
+        "phpstan/phpstan": "^1.10",
+        "friendsofphp/php-cs-fixer": "^3.48"
+    },
+    "autoload": {
+        "psr-4": {
+            "Nkamuo\\NotificationTrackerBundle\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Nkamuo\\NotificationTrackerBundle\\Tests\\": "tests/"
+        }
+    },
+    "config": {
+        "sort-packages": true,
+        "allow-plugins": {
+            "symfony/flex": true
+        }
+    },
+    "scripts": {
+        "test": "vendor/bin/phpunit",
+        "cs-fix": "vendor/bin/php-cs-fixer fix",
+        "phpstan": "vendor/bin/phpstan analyse"
+    }
+}

@@ -1,0 +1,8 @@
+monolog:
+    channels:
+        - notification_tracker
+        - notification_tracker.mailer
+        - notification_tracker.notifier
+        - notification_tracker.webhook
+        - notification_tracker.retry
+        - notification_tracker.messenger

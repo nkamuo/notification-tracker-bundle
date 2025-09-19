@@ -1,0 +1,91 @@
+# Default configuration for NotificationTrackerBundle
+notification_tracker:
+    enabled: true
+    
+    tracking:
+        enabled: true
+        track_opens: true
+        track_clicks: true
+        store_content: true
+        content_retention_days: 90
+        use_async: true
+    
+    storage:
+        attachment_directory: '%kernel.project_dir%/var/notification-tracker/attachments'
+        template_directory: '%kernel.project_dir%/var/notification-tracker/templates'
+        max_attachment_size: 10485760 # 10MB
+    
+    retry:
+        max_retries: 3
+        retry_delay: 3600 # 1 hour
+        retry_multiplier: 2.0
+        max_retry_delay: 86400 # 24 hours
+    
+    webhooks:
+        enabled: true
+        async_processing: true
+        verify_signatures: true
+        ip_whitelist_enabled: false
+        
+        providers:
+            sendgrid:
+                secret: '%env(SENDGRID_WEBHOOK_SECRET)%'
+                events: ['processed', 'delivered', 'open', 'click', 'bounce', 'dropped', 'spamreport', 'unsubscribe']
+                ip_whitelist:
+                    - '168.245.0.0/17'
+                    - '167.89.0.0/17'
+            
+            twilio:
+                auth_token: '%env(TWILIO_AUTH_TOKEN)%'
+                events: ['queued', 'sent', 'delivered', 'undelivered', 'failed']
+                ip_whitelist:
+                    - '54.172.60.0/23'
+                    - '54.244.51.0/24'
+            
+            mailgun:
+                signing_key: '%env(MAILGUN_SIGNING_KEY)%'
+                events: ['accepted', 'delivered', 'failed', 'opened', 'clicked', 'unsubscribed', 'complained']
+                ip_whitelist:
+                    - '18.235.0.0/16'
+                    - '52.217.0.0/16'
+            
+            mailchimp:
+                secret: '%env(MAILCHIMP_WEBHOOK_SECRET)%'
+                events: ['send', 'bounce', 'open', 'click', 'unsub', 'abuse']
+    
+    channels:
+        email:
+            enabled: true
+            transport: 'main'
+        sms:
+            enabled: true
+            transport: 'twilio'
+        slack:
+            enabled: true
+            transport: 'slack'
+        telegram:
+            enabled: true
+            transport: 'telegram'
+        push:
+            enabled: true
+            transport: 'firebase'
+    
+    templates:
+        enabled: true
+        default_engine: 'twig'
+        cache_compiled: true
+    
+    api:
+        enabled: true
+        path_prefix: '/api/notification-tracker'
+        items_per_page: 30
+        max_items_per_page: 100
+    
+    analytics:
+        enabled: true
+        cache_ttl: 3600
+        real_time: false
+    
+    messenger:
+        bus: 'message.bus'
+        transport: 'async'
