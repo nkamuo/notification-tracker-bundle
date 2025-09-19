@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.2] - 2025-09-19
+
+### Fixed
+- Fixed undefined array key "channels" error in NotificationTrackerExtension
+- Added missing configuration sections (channels, templates, api, analytics, messenger)
+- Added safety checks for configuration array access to prevent installation errors
+
 ## [0.1.1] - 2025-09-19
 
 ### Changed

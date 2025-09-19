@@ -110,26 +110,36 @@ class NotificationTrackerExtension extends Extension implements PrependExtension
         }
         
         // Channel parameters
-        $container->setParameter('notification_tracker.channels', $config['channels']);
+        if (isset($config['channels'])) {
+            $container->setParameter('notification_tracker.channels', $config['channels']);
+        }
         
         // Template parameters
-        foreach ($config['templates'] as $key => $value) {
-            $container->setParameter("notification_tracker.templates.{$key}", $value);
+        if (isset($config['templates'])) {
+            foreach ($config['templates'] as $key => $value) {
+                $container->setParameter("notification_tracker.templates.{$key}", $value);
+            }
         }
         
         // API parameters
-        foreach ($config['api'] as $key => $value) {
-            $container->setParameter("notification_tracker.api.{$key}", $value);
+        if (isset($config['api'])) {
+            foreach ($config['api'] as $key => $value) {
+                $container->setParameter("notification_tracker.api.{$key}", $value);
+            }
         }
         
         // Analytics parameters
-        foreach ($config['analytics'] as $key => $value) {
-            $container->setParameter("notification_tracker.analytics.{$key}", $value);
+        if (isset($config['analytics'])) {
+            foreach ($config['analytics'] as $key => $value) {
+                $container->setParameter("notification_tracker.analytics.{$key}", $value);
+            }
         }
         
         // Messenger parameters
-        foreach ($config['messenger'] as $key => $value) {
-            $container->setParameter("notification_tracker.messenger.{$key}", $value);
+        if (isset($config['messenger'])) {
+            foreach ($config['messenger'] as $key => $value) {
+                $container->setParameter("notification_tracker.messenger.{$key}", $value);
+            }
         }
     }
     
