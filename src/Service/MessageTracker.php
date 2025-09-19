@@ -45,6 +45,16 @@ class MessageTracker
         ?Notification $notification = null,
         array $metadata = []
     ): EmailMessage {
+        // Auto-create notification if none provided (for direct mailer usage)
+        if ($notification === null) {
+            $notification = $this->createAutoNotification('email', [
+                'subject' => $email->getSubject() ?? '(no subject)',
+                'channel' => 'email',
+                'transport' => $transportName,
+                'source' => 'direct_mailer'
+            ]);
+        }
+
         $message = new EmailMessage();
         $message->setSubject($email->getSubject() ?? '(no subject)');
         
@@ -109,6 +119,16 @@ class MessageTracker
         ?Notification $notification = null,
         array $metadata = []
     ): SmsMessage {
+        // Create auto-notification if none provided for unified tracking
+        if ($notification === null) {
+            $notification = $this->createAutoNotification('sms', [
+                'subject' => $sms->getSubject(),
+                'transport' => $transportName,
+                'phone' => $sms->getPhone(),
+                'source' => 'direct_sms_tracking'
+            ]);
+        }
+
         $message = new SmsMessage();
         $message->setFromNumber($sms->getFrom());
         $message->setTransportName($transportName);
@@ -155,6 +175,16 @@ class MessageTracker
         ?Notification $notification = null,
         array $metadata = []
     ): Message {
+        // Create auto-notification if none provided for unified tracking
+        if ($notification === null) {
+            $notification = $this->createAutoNotification($channelType, [
+                'subject' => $chat->getSubject(),
+                'transport' => $transportName,
+                'channel_type' => $channelType,
+                'source' => 'direct_chat_tracking'
+            ]);
+        }
+
         $message = match ($channelType) {
             'slack' => $this->createSlackMessage($chat),
             'telegram' => $this->createTelegramMessage($chat),
@@ -393,5 +423,61 @@ class MessageTracker
                 $recipient->incrementClickCount();
             }
         }
+    }
+
+    /**
+     * Create an automatic notification for direct channel usage
+     * This ensures all messages have a parent notification for unified tracking
+     */
+    private function createAutoNotification(string $channel, array $context = []): Notification
+    {
+        $notification = new Notification();
+        
+        // Generate a descriptive subject based on the channel and context
+        $subject = $this->generateAutoNotificationSubject($channel, $context);
+        $notification->setSubject($subject);
+        
+        // Set type as auto-generated
+        $notification->setType('auto_generated');
+        
+        // Set channels
+        $notification->setChannels([$channel]);
+        
+        // Set context with metadata to indicate this was auto-created
+        $notification->setContext([
+            'auto_generated' => true,
+            'source' => $context['source'] ?? 'unknown',
+            'original_channel' => $channel,
+            'created_by' => 'MessageTracker',
+            'context' => $context
+        ]);
+        
+        // Persist the notification first
+        $this->entityManager->persist($notification);
+        $this->entityManager->flush();
+        
+        $this->logger->info('Auto-created notification for direct channel usage', [
+            'notification_id' => (string) $notification->getId(),
+            'channel' => $channel,
+            'subject' => $subject,
+            'source' => $context['source'] ?? 'unknown'
+        ]);
+        
+        return $notification;
+    }
+
+    /**
+     * Generate a descriptive subject for auto-created notifications
+     */
+    private function generateAutoNotificationSubject(string $channel, array $context): string
+    {
+        $subject = $context['subject'] ?? null;
+        $source = $context['source'] ?? 'direct';
+        
+        if ($subject) {
+            return sprintf('[%s] %s', ucfirst($channel), $subject);
+        }
+        
+        return sprintf('[%s] Message sent via %s', ucfirst($channel), $source);
     }
 }
