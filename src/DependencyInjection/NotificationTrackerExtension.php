@@ -27,28 +27,37 @@ class NotificationTrackerExtension extends Extension implements PrependExtension
         $loader->load('services.yaml');
         
         if ($config['enabled']) {
-            $loader->load('event_subscribers.yaml');
-            $loader->load('message_handlers.yaml');
-            $loader->load('commands.yaml');
+            // Load optional service files with existence checks
+            $configFiles = [
+                'event_subscribers.yaml',
+                'message_handlers.yaml', 
+                'commands.yaml'
+            ];
             
-            if ($config['tracking']['enabled']) {
+            foreach ($configFiles as $file) {
+                if (file_exists(__DIR__ . '/../Resources/config/' . $file)) {
+                    $loader->load($file);
+                }
+            }
+            
+            if ($config['tracking']['enabled'] && file_exists(__DIR__ . '/../Resources/config/tracking.yaml')) {
                 $loader->load('tracking.yaml');
             }
             
-            if ($config['webhooks']['enabled']) {
+            if ($config['webhooks']['enabled'] && file_exists(__DIR__ . '/../Resources/config/webhooks.yaml')) {
                 $loader->load('webhooks.yaml');
                 $this->configureWebhookProviders($container, $config['webhooks']['providers']);
             }
             
-            if ($config['api']['enabled']) {
+            if ($config['api']['enabled'] && file_exists(__DIR__ . '/../Resources/config/api_platform.yaml')) {
                 $loader->load('api_platform.yaml');
             }
             
-            if ($config['analytics']['enabled']) {
+            if ($config['analytics']['enabled'] && file_exists(__DIR__ . '/../Resources/config/analytics.yaml')) {
                 $loader->load('analytics.yaml');
             }
             
-            if ($config['templates']['enabled']) {
+            if ($config['templates']['enabled'] && file_exists(__DIR__ . '/../Resources/config/templates.yaml')) {
                 $loader->load('templates.yaml');
             }
         }

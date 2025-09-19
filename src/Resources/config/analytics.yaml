@@ -1,0 +1,29 @@
+services:
+    # Analytics Services
+    Nkamuo\NotificationTrackerBundle\Service\Analytics\MessageAnalytics:
+        arguments:
+            $entityManager: '@doctrine.orm.entity_manager'
+            $retentionDays: '%notification_tracker.analytics.retention_days%'
+            $realTime: '%notification_tracker.analytics.real_time%'
+        tags:
+            - { name: 'notification_tracker.analytics' }
+
+    Nkamuo\NotificationTrackerBundle\Service\Analytics\StatisticsCollector:
+        arguments:
+            $entityManager: '@doctrine.orm.entity_manager'
+            $aggregateData: '%notification_tracker.analytics.aggregate_data%'
+        tags:
+            - { name: 'notification_tracker.statistics' }
+
+    # Analytics Repository Services
+    notification_tracker.analytics.message_repository:
+        class: Nkamuo\NotificationTrackerBundle\Repository\MessageRepository
+        factory: ['@doctrine.orm.entity_manager', 'getRepository']
+        arguments:
+            - 'Nkamuo\NotificationTrackerBundle\Entity\Message'
+
+    notification_tracker.analytics.notification_repository:
+        class: Nkamuo\NotificationTrackerBundle\Repository\NotificationRepository
+        factory: ['@doctrine.orm.entity_manager', 'getRepository']
+        arguments:
+            - 'Nkamuo\NotificationTrackerBundle\Entity\Notification'

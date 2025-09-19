@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.3] - 2025-09-19
+
+### Fixed
+- Added missing configuration files: tracking.yaml, analytics.yaml, templates.yaml
+- Added file existence checks in NotificationTrackerExtension to prevent FileLocator errors
+- Resolves "The file 'tracking.yaml' does not exist" installation error
+- Improved robustness of service container loading
+
+### Added
+- Complete service definitions for tracking, analytics, and template functionality
+- Proper dependency injection configuration for all bundle services
+
 ## [0.1.2] - 2025-09-19
 
 ### Fixed

@@ -1,0 +1,33 @@
+services:
+    # Message Tracking Services
+    Nkamuo\NotificationTrackerBundle\Service\MessageTracker:
+        arguments:
+            $entityManager: '@doctrine.orm.entity_manager'
+            $eventDispatcher: '@event_dispatcher'
+        tags:
+            - { name: 'notification_tracker.message_tracker' }
+
+    Nkamuo\NotificationTrackerBundle\Service\NotificationTracker:
+        arguments:
+            $entityManager: '@doctrine.orm.entity_manager'
+            $messageTracker: '@Nkamuo\NotificationTrackerBundle\Service\MessageTracker'
+            $eventDispatcher: '@event_dispatcher'
+        tags:
+            - { name: 'notification_tracker.notification_tracker' }
+
+    # Attachment Manager
+    Nkamuo\NotificationTrackerBundle\Service\AttachmentManager:
+        arguments:
+            $attachmentDirectory: '%notification_tracker.storage.attachment_directory%'
+            $maxAttachmentSize: '%notification_tracker.storage.max_attachment_size%'
+            $allowedMimeTypes: '%notification_tracker.storage.allowed_mime_types%'
+            $entityManager: '@doctrine.orm.entity_manager'
+
+    # Message Retry Service
+    Nkamuo\NotificationTrackerBundle\Service\MessageRetryService:
+        arguments:
+            $entityManager: '@doctrine.orm.entity_manager'
+            $messageBus: '@messenger.bus.default'
+            $maxRetries: '%notification_tracker.retry.max_retries%'
+            $retryDelay: '%notification_tracker.retry.retry_delay%'
+            $retryMultiplier: '%notification_tracker.retry.retry_multiplier%'

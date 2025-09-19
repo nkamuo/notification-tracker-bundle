@@ -1,0 +1,25 @@
+services:
+    # Template Services
+    Nkamuo\NotificationTrackerBundle\Service\TemplateManager:
+        arguments:
+            $entityManager: '@doctrine.orm.entity_manager'
+            $templateDirectory: '%notification_tracker.storage.template_directory%'
+            $defaultLocale: '%notification_tracker.templates.default_locale%'
+            $cacheEnabled: '%notification_tracker.templates.cache_enabled%'
+            $cacheTtl: '%notification_tracker.templates.cache_ttl%'
+        tags:
+            - { name: 'notification_tracker.template_manager' }
+
+    Nkamuo\NotificationTrackerBundle\Service\TemplateRenderer:
+        arguments:
+            $twig: '@twig'
+            $templateManager: '@Nkamuo\NotificationTrackerBundle\Service\TemplateManager'
+        tags:
+            - { name: 'notification_tracker.template_renderer' }
+
+    # Template Repository
+    notification_tracker.template_repository:
+        class: Nkamuo\NotificationTrackerBundle\Repository\MessageTemplateRepository
+        factory: ['@doctrine.orm.entity_manager', 'getRepository']
+        arguments:
+            - 'Nkamuo\NotificationTrackerBundle\Entity\MessageTemplate'
