@@ -156,20 +156,20 @@ abstract class Message
     #[Groups(['message:read'])]
     protected ?MessageTemplate $template = null;
 
-    #[ORM\OneToOne(targetEntity: MessageContent::class, mappedBy: 'message', cascade: ['persist', 'remove'])]
+    #[ORM\OneToOne(targetEntity: MessageContent::class, mappedBy: 'message', cascade: ['persist', 'remove'], orphanRemoval: true)]
     #[Groups(['message:read'])]
     protected ?MessageContent $content = null;
 
-    #[ORM\OneToMany(targetEntity: MessageRecipient::class, mappedBy: 'message', cascade: ['persist', 'remove'])]
+    #[ORM\OneToMany(targetEntity: MessageRecipient::class, mappedBy: 'message', cascade: ['persist', 'remove'], orphanRemoval: true)]
     #[Groups(['message:read'])]
     protected Collection $recipients;
 
-    #[ORM\OneToMany(targetEntity: MessageEvent::class, mappedBy: 'message', cascade: ['persist', 'remove'])]
+    #[ORM\OneToMany(targetEntity: MessageEvent::class, mappedBy: 'message', cascade: ['persist', 'remove'], orphanRemoval: true)]
     #[ORM\OrderBy(['occurredAt' => 'DESC'])]
     #[Groups(['message:read'])]
     protected Collection $events;
 
-    #[ORM\OneToMany(targetEntity: MessageAttachment::class, mappedBy: 'message', cascade: ['persist', 'remove'])]
+    #[ORM\OneToMany(targetEntity: MessageAttachment::class, mappedBy: 'message', cascade: ['persist', 'remove'], orphanRemoval: true)]
     #[Groups(['message:read'])]
     protected Collection $attachments;
 

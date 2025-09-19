@@ -79,7 +79,7 @@ class Notification
     #[Groups(['notification:read', 'notification:list'])]
     private \DateTimeImmutable $createdAt;
 
-    #[ORM\OneToMany(targetEntity: Message::class, mappedBy: 'notification')]
+    #[ORM\OneToMany(targetEntity: Message::class, mappedBy: 'notification', cascade: ['persist', 'remove'], orphanRemoval: true)]
     #[Groups(['notification:read'])]
     private Collection $messages;
 

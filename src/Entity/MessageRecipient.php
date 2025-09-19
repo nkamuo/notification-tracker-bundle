@@ -84,7 +84,7 @@ class MessageRecipient
     #[Groups(['message:read'])]
     private int $clickCount = 0;
 
-    #[ORM\OneToMany(targetEntity: MessageEvent::class, mappedBy: 'recipient')]
+    #[ORM\OneToMany(targetEntity: MessageEvent::class, mappedBy: 'recipient', cascade: ['persist', 'remove'], orphanRemoval: true)]
     private Collection $events;
 
     public function __construct()
