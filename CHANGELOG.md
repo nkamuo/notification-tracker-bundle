@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.1] - 2025-09-19
+
+### Changed
+- Updated Doctrine ORM dependency to support both 2.11+ and 3.0+ versions for better compatibility
+
 ## [0.1.0] - 2025-09-19
 
 ### Added
