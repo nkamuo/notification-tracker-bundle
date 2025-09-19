@@ -45,6 +45,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.7] - 2025-09-19
+
+### Fixed
+- Fixed TwilioWebhookProvider class not found error during installation
+- Commented out non-existent webhook providers (Twilio, Mailgun, Mailchimp) until implemented
+- Only SendGridWebhookProvider is currently available
+- Resolves service container compilation error during installation
+
 ## [0.1.6] - 2025-09-19
 
 ### Added
