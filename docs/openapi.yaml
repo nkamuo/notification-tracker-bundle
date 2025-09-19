@@ -1,0 +1,1610 @@
+openapi: 3.0.3
+info:
+  title: Notification Tracker Bundle API
+  description: |
+    Enterprise-grade multi-channel notification management API with comprehensive tracking, analytics, and webhook integration.
+    
+    ## Features
+    - **Multi-Channel Support**: Email, SMS, Push, Slack, Telegram
+    - **Real-time Tracking**: Delivery, opens, clicks, bounces
+    - **Webhook Integration**: Automatic event processing
+    - **Rich Analytics**: Performance metrics and engagement statistics
+    - **Scalable Architecture**: High-performance, enterprise-ready
+    
+    ## Authentication
+    This API supports multiple authentication methods:
+    - API Key authentication via `X-API-Key` header
+    - JWT Bearer tokens via `Authorization` header
+    - Session-based authentication (web interface)
+    
+    ## Rate Limiting
+    - **Standard**: 1000 requests per hour
+    - **Premium**: 10000 requests per hour
+    - **Enterprise**: Unlimited
+    
+    Rate limit headers are included in all responses:
+    - `X-RateLimit-Limit`: Request limit per hour
+    - `X-RateLimit-Remaining`: Remaining requests
+    - `X-RateLimit-Reset`: Time when rate limit resets
+    
+  version: 1.0.0
+  contact:
+    name: Notification Tracker Support
+    email: support@notification-tracker.com
+    url: https://github.com/nkamuo/notification-tracker-bundle
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: https://api.yourapp.com/notification-tracker
+    description: Production server
+  - url: https://staging-api.yourapp.com/notification-tracker
+    description: Staging server
+  - url: http://localhost:8000/notification-tracker
+    description: Development server
+
+security:
+  - ApiKeyAuth: []
+  - BearerAuth: []
+
+paths:
+  /notifications:
+    get:
+      summary: List notifications
+      description: |
+        Retrieve a paginated list of notifications with optional filtering and sorting.
+        
+        ## Filtering
+        Use query parameters to filter results by various criteria such as type, importance, date range, and more.
+        
+        ## Sorting
+        Sort results by creation date, type, importance, or subject using the `order` parameter.
+        
+        ## Pagination
+        Results are paginated with a default of 20 items per page (maximum 100).
+      operationId: getNotifications
+      tags:
+        - Notifications
+      parameters:
+        - name: page
+          in: query
+          description: Page number (1-based)
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: itemsPerPage
+          in: query
+          description: Number of items per page
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: type
+          in: query
+          description: Filter by notification type
+          schema:
+            type: string
+            example: welcome
+        - name: importance
+          in: query
+          description: Filter by importance level
+          schema:
+            type: string
+            enum: [low, normal, high, urgent]
+        - name: subject
+          in: query
+          description: Search in subject (partial match)
+          schema:
+            type: string
+        - name: order[createdAt]
+          in: query
+          description: Sort by creation date
+          schema:
+            type: string
+            enum: [asc, desc]
+            default: desc
+        - name: order[type]
+          in: query
+          description: Sort by notification type
+          schema:
+            type: string
+            enum: [asc, desc]
+        - name: order[importance]
+          in: query
+          description: Sort by importance
+          schema:
+            type: string
+            enum: [asc, desc]
+        - name: createdAt[after]
+          in: query
+          description: Filter notifications created after this date
+          schema:
+            type: string
+            format: date-time
+        - name: createdAt[before]
+          in: query
+          description: Filter notifications created before this date
+          schema:
+            type: string
+            format: date-time
+      responses:
+        '200':
+          description: Successful response with paginated notifications
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationCollection'
+              examples:
+                notifications_list:
+                  summary: List of notifications
+                  value:
+                    "@context": "/notification-tracker/contexts/Notification"
+                    "@id": "/notification-tracker/notifications"
+                    "@type": "hydra:Collection"
+                    "hydra:member":
+                      - "@id": "/notification-tracker/notifications/01ARZ3NDEKTSV4RRFFQ69G5FAV"
+                        "@type": "Notification"
+                        id: "01ARZ3NDEKTSV4RRFFQ69G5FAV"
+                        type: "welcome"
+                        importance: "normal"
+                        subject: "Welcome to Our Platform!"
+                        channels: ["email", "sms"]
+                        userId: "01ARZ3NDEKTSV4RRFFQ69G5FB0"
+                        createdAt: "2025-09-19T10:30:00+00:00"
+                        totalMessages: 2
+                        messageStats:
+                          total: 2
+                          sent: 2
+                          delivered: 2
+                          failed: 0
+                          pending: 0
+                          queued: 0
+                          cancelled: 0
+                        engagementStats:
+                          totalRecipients: 1
+                          uniqueOpens: 1
+                          uniqueClicks: 0
+                          openRate: 100.0
+                          clickRate: 0.0
+                          bounceRate: 0.0
+                    "hydra:totalItems": 150
+                    "hydra:view":
+                      "@id": "/notification-tracker/notifications?page=1"
+                      "@type": "hydra:PartialCollectionView"
+                      "hydra:first": "/notification-tracker/notifications?page=1"
+                      "hydra:last": "/notification-tracker/notifications?page=8"
+                      "hydra:next": "/notification-tracker/notifications?page=2"
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+    post:
+      summary: Create notification
+      description: |
+        Create a new notification with support for multiple channels and recipients.
+        
+        ## Multi-Channel Support
+        Specify multiple channels (email, SMS, push, Slack, Telegram) in a single request.
+        The system will automatically create appropriate message entities for each channel.
+        
+        ## Recipient Configuration
+        Each recipient can have different contact methods (email, phone, device token, etc.)
+        based on the selected channels.
+        
+        ## Channel Settings
+        Configure transport providers, formatting options, and other channel-specific
+        settings using the `channelSettings` object.
+        
+        ## Automatic Processing
+        Once created, the notification will:
+        1. Generate individual messages for each channel/recipient combination
+        2. Queue messages for delivery via configured transports
+        3. Begin tracking delivery status and engagement metrics
+        4. Process webhook events as they arrive from providers
+      operationId: createNotification
+      tags:
+        - Notifications
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateNotificationRequest'
+            examples:
+              simple_email:
+                summary: Simple email notification
+                value:
+                  type: "welcome"
+                  importance: "normal"
+                  subject: "Welcome to Our Platform!"
+                  channels: ["email"]
+                  content: "<h1>Welcome!</h1><p>Thank you for joining us.</p>"
+                  recipients:
+                    - email: "newuser@example.com"
+                      name: "New User"
+                  channelSettings:
+                    email:
+                      transport: "sendgrid"
+                      from_email: "welcome@yourapp.com"
+                      from_name: "Your App Team"
+              multi_channel:
+                summary: Multi-channel notification
+                value:
+                  type: "emergency_alert"
+                  importance: "urgent"
+                  subject: "System Maintenance Alert"
+                  channels: ["email", "sms", "slack"]
+                  content: "URGENT: System maintenance will begin in 30 minutes."
+                  recipients:
+                    - email: "admin@company.com"
+                      phone: "+1234567890"
+                      name: "System Admin"
+                  channelSettings:
+                    email:
+                      transport: "sendgrid"
+                      from_email: "alerts@company.com"
+                    sms:
+                      transport: "twilio"
+                      from_number: "+1987654321"
+                    slack:
+                      transport: "slack_webhook"
+                  context:
+                    alert_level: "critical"
+                    maintenance_window: "2025-09-19T02:00:00Z"
+      responses:
+        '201':
+          description: Notification created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationDetail'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /notifications/{id}:
+    get:
+      summary: Get notification details
+      description: |
+        Retrieve detailed information about a specific notification including
+        all associated messages, events, and analytics.
+        
+        ## Included Data
+        - Full notification details with metadata
+        - All associated messages with current status
+        - Recipient information and engagement metrics
+        - Performance statistics and channel breakdown
+        - Timeline of all events related to this notification
+      operationId: getNotification
+      tags:
+        - Notifications
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Notification ID (ULID format)
+          schema:
+            type: string
+            pattern: '^[0-9A-HJKMNP-TV-Z]{26}$'
+            example: "01ARZ3NDEKTSV4RRFFQ69G5FAV"
+      responses:
+        '200':
+          description: Notification details retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationDetail'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /messages:
+    get:
+      summary: List messages
+      description: |
+        Retrieve a paginated list of messages with filtering and sorting options.
+        
+        ## Message Types
+        - `email` - Email messages
+        - `sms` - SMS messages  
+        - `push` - Push notifications
+        - `slack` - Slack messages
+        - `telegram` - Telegram messages
+        
+        ## Status Tracking
+        Messages progress through various states from creation to final delivery.
+        Use status filtering to monitor message lifecycle.
+      operationId: getMessages
+      tags:
+        - Messages
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: itemsPerPage
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 25
+        - name: status
+          in: query
+          description: Filter by message status
+          schema:
+            $ref: '#/components/schemas/MessageStatus'
+        - name: type
+          in: query
+          description: Filter by message type
+          schema:
+            type: string
+            enum: [email, sms, push, slack, telegram]
+        - name: transportName
+          in: query
+          description: Filter by transport provider
+          schema:
+            type: string
+            example: sendgrid
+        - name: subject
+          in: query
+          description: Search in message subject
+          schema:
+            type: string
+        - name: notification.type
+          in: query
+          description: Filter by notification type
+          schema:
+            type: string
+        - name: order[createdAt]
+          in: query
+          schema:
+            type: string
+            enum: [asc, desc]
+            default: desc
+        - name: createdAt[after]
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: createdAt[before]
+          in: query
+          schema:
+            type: string
+            format: date-time
+      responses:
+        '200':
+          description: Successful response with paginated messages
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageCollection'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /messages/{id}:
+    get:
+      summary: Get message details
+      operationId: getMessage
+      tags:
+        - Messages
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: '^[0-9A-HJKMNP-TV-Z]{26}$'
+      responses:
+        '200':
+          description: Message details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageDetail'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    delete:
+      summary: Delete message
+      operationId: deleteMessage
+      tags:
+        - Messages
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: '^[0-9A-HJKMNP-TV-Z]{26}$'
+      responses:
+        '204':
+          description: Message deleted successfully
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: Cannot delete message in current state
+
+  /messages/{id}/retry:
+    post:
+      summary: Retry failed message
+      description: |
+        Retry a failed message by creating a new delivery attempt.
+        
+        ## Retry Conditions
+        - Message must be in `failed` or `bounced` status
+        - Retry limit has not been exceeded
+        - Transport is available and configured
+        
+        ## Retry Logic
+        The system will:
+        1. Create a new delivery attempt
+        2. Reset message status to `queued`
+        3. Apply exponential backoff if multiple retries
+        4. Track retry attempts in message events
+      operationId: retryMessage
+      tags:
+        - Messages
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: '^[0-9A-HJKMNP-TV-Z]{26}$'
+      responses:
+        '200':
+          description: Message retry initiated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageDetail'
+        '400':
+          description: Message cannot be retried
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /messages/{id}/cancel:
+    post:
+      summary: Cancel message
+      description: |
+        Cancel a message that is pending or queued for delivery.
+        
+        ## Cancellation Rules
+        - Only messages in `pending` or `queued` status can be cancelled
+        - Messages already `sent` cannot be cancelled
+        - Cancelled messages are marked as `cancelled` status
+      operationId: cancelMessage
+      tags:
+        - Messages
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: '^[0-9A-HJKMNP-TV-Z]{26}$'
+      responses:
+        '200':
+          description: Message cancelled successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageDetail'
+        '400':
+          description: Message cannot be cancelled
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /events:
+    get:
+      summary: List message events
+      description: |
+        Retrieve a paginated list of message events with filtering options.
+        
+        ## Event Types
+        Events track the lifecycle and engagement of messages:
+        - `sent` - Message sent to provider
+        - `delivered` - Message delivered to recipient
+        - `opened` - Message opened (email)
+        - `clicked` - Link clicked in message
+        - `bounced` - Message bounced
+        - `failed` - Delivery failed
+        - `replied` - Recipient replied (SMS/chat)
+        - `unsubscribed` - Recipient unsubscribed
+      operationId: getEvents
+      tags:
+        - Events
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: itemsPerPage
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 25
+        - name: type
+          in: query
+          description: Filter by event type
+          schema:
+            $ref: '#/components/schemas/EventType'
+        - name: message.id
+          in: query
+          description: Filter by message ID
+          schema:
+            type: string
+        - name: notification.id
+          in: query
+          description: Filter by notification ID
+          schema:
+            type: string
+        - name: order[createdAt]
+          in: query
+          schema:
+            type: string
+            enum: [asc, desc]
+            default: desc
+      responses:
+        '200':
+          description: Successful response with paginated events
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventCollection'
+
+  /recipients:
+    get:
+      summary: List message recipients
+      operationId: getRecipients
+      tags:
+        - Recipients
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: itemsPerPage
+          in: query
+          schema:
+            type: integer
+            default: 25
+            maximum: 100
+      responses:
+        '200':
+          description: Successful response with paginated recipients
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecipientCollection'
+
+  /templates:
+    get:
+      summary: List message templates
+      operationId: getTemplates
+      tags:
+        - Templates
+      responses:
+        '200':
+          description: Successful response with templates
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TemplateCollection'
+
+  /statistics/dashboard:
+    get:
+      summary: Get dashboard statistics
+      description: |
+        Retrieve comprehensive statistics for the dashboard overview.
+        
+        ## Included Metrics
+        - Channel volume and performance statistics
+        - Delivery and engagement rates
+        - Trend analysis and comparisons
+        - Top performing notifications
+      operationId: getDashboardStats
+      tags:
+        - Analytics
+      parameters:
+        - name: period
+          in: query
+          description: Time period for statistics
+          schema:
+            type: string
+            enum: [1d, 7d, 30d, 90d]
+            default: 30d
+      responses:
+        '200':
+          description: Dashboard statistics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DashboardStats'
+
+  /webhooks/{provider}:
+    post:
+      summary: Webhook handler
+      description: |
+        Handle incoming webhooks from notification providers.
+        
+        ## Supported Providers
+        - `sendgrid` - SendGrid email events
+        - `twilio` - Twilio SMS events
+        - `mailgun` - Mailgun email events
+        - `firebase` - Firebase push notification events
+        - `slack` - Slack message events
+        - `telegram` - Telegram bot events
+        
+        ## Security
+        - Webhook signatures are verified when configured
+        - Events are processed asynchronously for high throughput
+        - Failed events are automatically retried with exponential backoff
+        
+        ## Event Processing
+        1. Webhook received and validated
+        2. Event stored in webhook payload table
+        3. Processing queued via Symfony Messenger
+        4. Message status updated based on event type
+        5. Analytics and metrics updated
+      operationId: handleWebhook
+      tags:
+        - Webhooks
+      parameters:
+        - name: provider
+          in: path
+          required: true
+          description: Provider name
+          schema:
+            type: string
+            enum: [sendgrid, twilio, mailgun, firebase, slack, telegram]
+      requestBody:
+        required: true
+        description: Provider-specific webhook payload
+        content:
+          application/json:
+            schema:
+              type: object
+              description: Webhook payload (format varies by provider)
+      responses:
+        '200':
+          description: Webhook processed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  message:
+                    type: string
+                    example: Webhook processed successfully
+        '400':
+          description: Invalid webhook payload
+        '401':
+          description: Webhook signature verification failed
+        '500':
+          description: Webhook processing failed
+
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: API key authentication
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token authentication
+
+  schemas:
+    NotificationCollection:
+      type: object
+      properties:
+        "@context":
+          type: string
+          example: "/notification-tracker/contexts/Notification"
+        "@id":
+          type: string
+          example: "/notification-tracker/notifications"
+        "@type":
+          type: string
+          example: "hydra:Collection"
+        "hydra:member":
+          type: array
+          items:
+            $ref: '#/components/schemas/NotificationListItem'
+        "hydra:totalItems":
+          type: integer
+          example: 150
+        "hydra:view":
+          $ref: '#/components/schemas/HydraView'
+
+    NotificationListItem:
+      type: object
+      properties:
+        "@id":
+          type: string
+          example: "/notification-tracker/notifications/01ARZ3NDEKTSV4RRFFQ69G5FAV"
+        "@type":
+          type: string
+          example: "Notification"
+        id:
+          type: string
+          pattern: '^[0-9A-HJKMNP-TV-Z]{26}$'
+          example: "01ARZ3NDEKTSV4RRFFQ69G5FAV"
+        type:
+          type: string
+          example: "welcome"
+        importance:
+          $ref: '#/components/schemas/ImportanceLevel'
+        subject:
+          type: string
+          nullable: true
+          example: "Welcome to Our Platform!"
+        channels:
+          type: array
+          items:
+            $ref: '#/components/schemas/ChannelType'
+        userId:
+          type: string
+          nullable: true
+          pattern: '^[0-9A-HJKMNP-TV-Z]{26}$'
+        createdAt:
+          type: string
+          format: date-time
+          example: "2025-09-19T10:30:00+00:00"
+        totalMessages:
+          type: integer
+          example: 2
+        messageStats:
+          $ref: '#/components/schemas/MessageStats'
+        engagementStats:
+          $ref: '#/components/schemas/EngagementStats'
+
+    NotificationDetail:
+      allOf:
+        - $ref: '#/components/schemas/NotificationListItem'
+        - type: object
+          properties:
+            context:
+              type: object
+              nullable: true
+              example:
+                campaign_id: "summer_2025"
+                user_segment: "new_users"
+            messages:
+              type: array
+              items:
+                $ref: '#/components/schemas/MessageSummary'
+            channelBreakdown:
+              type: object
+              additionalProperties:
+                $ref: '#/components/schemas/ChannelStats'
+
+    CreateNotificationRequest:
+      type: object
+      required:
+        - type
+        - channels
+        - recipients
+      properties:
+        type:
+          type: string
+          minLength: 2
+          maxLength: 100
+          pattern: '^[a-zA-Z0-9_-]+$'
+          example: "welcome"
+          description: "Notification type identifier"
+        importance:
+          $ref: '#/components/schemas/ImportanceLevel'
+        subject:
+          type: string
+          maxLength: 255
+          example: "Welcome to Our Platform!"
+          description: "Notification subject/title"
+        channels:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/ChannelType'
+          example: ["email", "sms"]
+        content:
+          type: string
+          maxLength: 65535
+          example: "Welcome! Thank you for joining our platform."
+          description: "Main notification content"
+        recipients:
+          type: array
+          minItems: 1
+          maxItems: 1000
+          items:
+            $ref: '#/components/schemas/RecipientInput'
+        channelSettings:
+          $ref: '#/components/schemas/ChannelSettings'
+        context:
+          type: object
+          nullable: true
+          example:
+            campaign_id: "welcome_series_2025"
+            user_segment: "free_trial"
+          description: "Custom metadata for the notification"
+        userId:
+          type: string
+          nullable: true
+          pattern: '^[0-9A-HJKMNP-TV-Z]{26}$'
+          description: "Associated user ID (ULID format)"
+
+    RecipientInput:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 255
+          example: "John Doe"
+        email:
+          type: string
+          format: email
+          example: "john@example.com"
+          description: "Required for email channel"
+        phone:
+          type: string
+          pattern: '^\+[1-9]\d{1,14}$'
+          example: "+1234567890"
+          description: "Required for SMS channel (E.164 format)"
+        device_token:
+          type: string
+          example: "fcm_device_token_here"
+          description: "Required for push channel"
+        channel:
+          type: string
+          example: "#general"
+          description: "Required for Slack channel"
+        chat_id:
+          type: string
+          example: "123456789"
+          description: "Required for Telegram channel"
+        user_id:
+          type: string
+          pattern: '^[0-9A-HJKMNP-TV-Z]{26}$'
+          description: "Optional user ID (ULID format)"
+
+    ChannelSettings:
+      type: object
+      properties:
+        email:
+          $ref: '#/components/schemas/EmailSettings'
+        sms:
+          $ref: '#/components/schemas/SmsSettings'
+        push:
+          $ref: '#/components/schemas/PushSettings'
+        slack:
+          $ref: '#/components/schemas/SlackSettings'
+        telegram:
+          $ref: '#/components/schemas/TelegramSettings'
+
+    EmailSettings:
+      type: object
+      properties:
+        transport:
+          type: string
+          example: "sendgrid"
+        from_email:
+          type: string
+          format: email
+          example: "noreply@yourapp.com"
+        from_name:
+          type: string
+          example: "Your App Team"
+        subject:
+          type: string
+          example: "Custom Email Subject"
+        template_id:
+          type: string
+          example: "welcome_template_v1"
+
+    SmsSettings:
+      type: object
+      properties:
+        transport:
+          type: string
+          example: "twilio"
+        from_number:
+          type: string
+          pattern: '^\+[1-9]\d{1,14}$'
+          example: "+1234567890"
+
+    PushSettings:
+      type: object
+      properties:
+        transport:
+          type: string
+          example: "firebase"
+        title:
+          type: string
+          example: "Push Notification Title"
+        icon:
+          type: string
+          example: "notification_icon"
+        click_action:
+          type: string
+          example: "OPEN_ACTIVITY"
+
+    SlackSettings:
+      type: object
+      properties:
+        transport:
+          type: string
+          example: "slack_webhook"
+        username:
+          type: string
+          example: "NotificationBot"
+        icon_emoji:
+          type: string
+          example: ":bell:"
+
+    TelegramSettings:
+      type: object
+      properties:
+        transport:
+          type: string
+          example: "telegram_bot"
+        parse_mode:
+          type: string
+          enum: [HTML, Markdown]
+        disable_notification:
+          type: boolean
+          default: false
+
+    MessageCollection:
+      type: object
+      properties:
+        "hydra:member":
+          type: array
+          items:
+            $ref: '#/components/schemas/MessageSummary'
+        "hydra:totalItems":
+          type: integer
+        "hydra:view":
+          $ref: '#/components/schemas/HydraView'
+
+    MessageSummary:
+      type: object
+      properties:
+        "@id":
+          type: string
+        id:
+          type: string
+          pattern: '^[0-9A-HJKMNP-TV-Z]{26}$'
+        type:
+          $ref: '#/components/schemas/ChannelType'
+        status:
+          $ref: '#/components/schemas/MessageStatus'
+        subject:
+          type: string
+          nullable: true
+        transportName:
+          type: string
+          nullable: true
+        messageId:
+          type: string
+          nullable: true
+          description: "Provider-specific message ID"
+        createdAt:
+          type: string
+          format: date-time
+        sentAt:
+          type: string
+          format: date-time
+          nullable: true
+        notification:
+          type: object
+          properties:
+            id:
+              type: string
+            type:
+              type: string
+            subject:
+              type: string
+        recipients:
+          type: array
+          items:
+            $ref: '#/components/schemas/RecipientSummary'
+
+    MessageDetail:
+      allOf:
+        - $ref: '#/components/schemas/MessageSummary'
+        - type: object
+          properties:
+            content:
+              $ref: '#/components/schemas/MessageContent'
+            events:
+              type: array
+              items:
+                $ref: '#/components/schemas/MessageEvent'
+            metadata:
+              type: object
+              nullable: true
+
+    MessageContent:
+      type: object
+      properties:
+        id:
+          type: string
+        contentType:
+          type: string
+          example: "text/html"
+        bodyText:
+          type: string
+          nullable: true
+        bodyHtml:
+          type: string
+          nullable: true
+        structuredData:
+          type: object
+          nullable: true
+        rawContent:
+          type: string
+          nullable: true
+
+    RecipientSummary:
+      type: object
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+          enum: [to, cc, bcc]
+        address:
+          type: string
+          description: "Email, phone, or other contact address"
+        name:
+          type: string
+          nullable: true
+        status:
+          $ref: '#/components/schemas/RecipientStatus'
+        deliveredAt:
+          type: string
+          format: date-time
+          nullable: true
+        openedAt:
+          type: string
+          format: date-time
+          nullable: true
+        clickedAt:
+          type: string
+          format: date-time
+          nullable: true
+        bouncedAt:
+          type: string
+          format: date-time
+          nullable: true
+        openCount:
+          type: integer
+          minimum: 0
+        clickCount:
+          type: integer
+          minimum: 0
+
+    MessageEvent:
+      type: object
+      properties:
+        id:
+          type: string
+        type:
+          $ref: '#/components/schemas/EventType'
+        createdAt:
+          type: string
+          format: date-time
+        metadata:
+          type: object
+          nullable: true
+        recipient:
+          $ref: '#/components/schemas/RecipientSummary'
+
+    EventCollection:
+      type: object
+      properties:
+        "hydra:member":
+          type: array
+          items:
+            $ref: '#/components/schemas/MessageEvent'
+        "hydra:totalItems":
+          type: integer
+        "hydra:view":
+          $ref: '#/components/schemas/HydraView'
+
+    RecipientCollection:
+      type: object
+      properties:
+        "hydra:member":
+          type: array
+          items:
+            $ref: '#/components/schemas/RecipientSummary'
+        "hydra:totalItems":
+          type: integer
+        "hydra:view":
+          $ref: '#/components/schemas/HydraView'
+
+    TemplateCollection:
+      type: object
+      properties:
+        "hydra:member":
+          type: array
+          items:
+            $ref: '#/components/schemas/MessageTemplate'
+        "hydra:totalItems":
+          type: integer
+
+    MessageTemplate:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+          nullable: true
+        type:
+          $ref: '#/components/schemas/ChannelType'
+        subject:
+          type: string
+          nullable: true
+        bodyText:
+          type: string
+          nullable: true
+        bodyHtml:
+          type: string
+          nullable: true
+        isActive:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    DashboardStats:
+      type: object
+      properties:
+        summary:
+          type: object
+          properties:
+            totalSent:
+              type: integer
+            deliveryRate:
+              type: number
+              format: float
+            openRate:
+              type: number
+              format: float
+            clickRate:
+              type: number
+              format: float
+            bounceRate:
+              type: number
+              format: float
+        channels:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/ChannelStats'
+        trends:
+          type: object
+          properties:
+            volume:
+              $ref: '#/components/schemas/ChartData'
+            deliveryRates:
+              $ref: '#/components/schemas/ChartData'
+            engagementRates:
+              $ref: '#/components/schemas/ChartData'
+        topPerforming:
+          type: array
+          items:
+            type: object
+            properties:
+              notificationType:
+                type: string
+              metrics:
+                $ref: '#/components/schemas/PerformanceMetrics'
+
+    ChannelStats:
+      type: object
+      properties:
+        total:
+          type: integer
+        sent:
+          type: integer
+        delivered:
+          type: integer
+        failed:
+          type: integer
+        deliveryRate:
+          type: number
+          format: float
+        engagementRate:
+          type: number
+          format: float
+        cost:
+          type: number
+          format: float
+          nullable: true
+
+    PerformanceMetrics:
+      type: object
+      properties:
+        deliveryRate:
+          type: number
+          format: float
+        openRate:
+          type: number
+          format: float
+        clickRate:
+          type: number
+          format: float
+        bounceRate:
+          type: number
+          format: float
+        unsubscribeRate:
+          type: number
+          format: float
+
+    ChartData:
+      type: object
+      properties:
+        labels:
+          type: array
+          items:
+            type: string
+        datasets:
+          type: array
+          items:
+            type: object
+            properties:
+              label:
+                type: string
+              data:
+                type: array
+                items:
+                  type: number
+              backgroundColor:
+                type: string
+              borderColor:
+                type: string
+
+    MessageStats:
+      type: object
+      properties:
+        total:
+          type: integer
+          minimum: 0
+        sent:
+          type: integer
+          minimum: 0
+        delivered:
+          type: integer
+          minimum: 0
+        failed:
+          type: integer
+          minimum: 0
+        pending:
+          type: integer
+          minimum: 0
+        queued:
+          type: integer
+          minimum: 0
+        cancelled:
+          type: integer
+          minimum: 0
+
+    EngagementStats:
+      type: object
+      properties:
+        totalRecipients:
+          type: integer
+          minimum: 0
+        uniqueOpens:
+          type: integer
+          minimum: 0
+        uniqueClicks:
+          type: integer
+          minimum: 0
+        openRate:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 100
+        clickRate:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 100
+        bounceRate:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 100
+
+    HydraView:
+      type: object
+      properties:
+        "@id":
+          type: string
+        "@type":
+          type: string
+          example: "hydra:PartialCollectionView"
+        "hydra:first":
+          type: string
+          nullable: true
+        "hydra:last":
+          type: string
+          nullable: true
+        "hydra:previous":
+          type: string
+          nullable: true
+        "hydra:next":
+          type: string
+          nullable: true
+
+    ImportanceLevel:
+      type: string
+      enum: [low, normal, high, urgent]
+      default: normal
+      example: normal
+
+    ChannelType:
+      type: string
+      enum: [email, sms, push, slack, telegram]
+      example: email
+
+    MessageStatus:
+      type: string
+      enum: [pending, queued, sending, sent, delivered, failed, bounced, cancelled, retrying]
+      example: delivered
+
+    RecipientStatus:
+      type: string
+      enum: [pending, sent, delivered, failed, bounced, opened, clicked, unsubscribed]
+      example: delivered
+
+    EventType:
+      type: string
+      enum: [sent, delivered, opened, clicked, bounced, failed, replied, unsubscribed]
+      example: delivered
+
+    Error:
+      type: object
+      properties:
+        "@context":
+          type: string
+          example: "/notification-tracker/contexts/Error"
+        "@type":
+          type: string
+          example: "hydra:Error"
+        "hydra:title":
+          type: string
+          example: "An error occurred"
+        "hydra:description":
+          type: string
+          example: "Invalid request parameters"
+        type:
+          type: string
+          example: "https://tools.ietf.org/html/rfc2616#section-10"
+        title:
+          type: string
+          example: "Bad Request"
+        status:
+          type: integer
+          example: 400
+        detail:
+          type: string
+          example: "The 'type' field is required"
+
+    ValidationError:
+      allOf:
+        - $ref: '#/components/schemas/Error'
+        - type: object
+          properties:
+            violations:
+              type: array
+              items:
+                type: object
+                properties:
+                  propertyPath:
+                    type: string
+                    example: "recipients[0].email"
+                  message:
+                    type: string
+                    example: "This value should be a valid email address"
+                  code:
+                    type: string
+                    example: "bd79c0ab-ddba-46cc-a703-a7a4b08de310"
+
+  responses:
+    BadRequest:
+      description: Bad request - Invalid parameters
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            "@context": "/notification-tracker/contexts/Error"
+            "@type": "hydra:Error"
+            "hydra:title": "An error occurred"
+            "hydra:description": "Invalid request parameters"
+            type: "https://tools.ietf.org/html/rfc2616#section-10"
+            title: "Bad Request"
+            status: 400
+            detail: "The 'type' field is required"
+
+    Unauthorized:
+      description: Unauthorized - Invalid or missing authentication
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            "@context": "/notification-tracker/contexts/Error"
+            "@type": "hydra:Error"
+            "hydra:title": "An error occurred"
+            "hydra:description": "Access denied"
+            type: "https://tools.ietf.org/html/rfc2616#section-10"
+            title: "Unauthorized"
+            status: 401
+            detail: "Invalid API key provided"
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            "@context": "/notification-tracker/contexts/Error"
+            "@type": "hydra:Error"
+            "hydra:title": "An error occurred"
+            "hydra:description": "Resource not found"
+            type: "https://tools.ietf.org/html/rfc2616#section-10"
+            title: "Not Found"
+            status: 404
+            detail: "Notification with ID '01ARZ3NDEKTSV4RRFFQ69G5FAV' not found"
+
+    ValidationError:
+      description: Validation error - Invalid request data
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ValidationError'
+          example:
+            "@context": "/notification-tracker/contexts/ConstraintViolationList"
+            "@type": "ConstraintViolationList"
+            "hydra:title": "An error occurred"
+            "hydra:description": "type: This value should not be blank.\nrecipients: This value should not be blank."
+            violations:
+              - propertyPath: "type"
+                message: "This value should not be blank."
+                code: "c1051bb4-d103-4f74-8988-acbcafc7fdc3"
+              - propertyPath: "recipients"
+                message: "This value should not be blank."
+                code: "c1051bb4-d103-4f74-8988-acbcafc7fdc3"
+
+    RateLimited:
+      description: Rate limit exceeded
+      headers:
+        X-RateLimit-Limit:
+          description: Request limit per hour
+          schema:
+            type: integer
+            example: 1000
+        X-RateLimit-Remaining:
+          description: Remaining requests
+          schema:
+            type: integer
+            example: 0
+        X-RateLimit-Reset:
+          description: Time when rate limit resets
+          schema:
+            type: integer
+            example: 1632384000
+        Retry-After:
+          description: Seconds to wait before retrying
+          schema:
+            type: integer
+            example: 3600
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            "@context": "/notification-tracker/contexts/Error"
+            "@type": "hydra:Error"
+            "hydra:title": "An error occurred"
+            "hydra:description": "Rate limit exceeded"
+            type: "https://tools.ietf.org/html/rfc2616#section-10"
+            title: "Too Many Requests"
+            status: 429
+            detail: "Rate limit of 1000 requests per hour exceeded"
+
+    ServerError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            "@context": "/notification-tracker/contexts/Error"
+            "@type": "hydra:Error"
+            "hydra:title": "An error occurred"
+            "hydra:description": "Internal server error"
+            type: "https://tools.ietf.org/html/rfc2616#section-10"
+            title: "Internal Server Error"
+            status: 500
+            detail: "An unexpected error occurred"
+
+tags:
+  - name: Notifications
+    description: |
+      Notification management operations including creation, listing, and detailed views.
+      Notifications are the primary entity that can generate multiple messages across different channels.
+  
+  - name: Messages
+    description: |
+      Individual message operations for tracking and managing delivery across all channels.
+      Messages represent the actual communications sent via specific transports.
+  
+  - name: Events
+    description: |
+      Message lifecycle events including delivery confirmation, engagement tracking, and failure monitoring.
+      Events provide granular tracking of message interactions.
+  
+  - name: Recipients
+    description: |
+      Recipient management and engagement tracking.
+      Recipients represent the targets of notifications with their contact information and interaction history.
+  
+  - name: Templates
+    description: |
+      Message template management for reusable notification content.
+      Templates enable consistent messaging across campaigns and notification types.
+  
+  - name: Analytics
+    description: |
+      Performance analytics and reporting endpoints.
+      Provides comprehensive insights into notification performance and engagement metrics.
+  
+  - name: Webhooks
+    description: |
+      Webhook endpoints for receiving delivery status updates from external providers.
+      Enables real-time tracking of message lifecycle events.
