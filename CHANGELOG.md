@@ -45,6 +45,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.12] - 2025-09-19
+
+### Added
+- Auto-tracking for untracked messages in MailerEventSubscriber
+- Automatic message tracking for emails sent directly via Symfony Mailer
+- Support for `php bin/console mailer:test` command tracking
+- Comprehensive error handling and logging for auto-tracking process
+
+### Fixed
+- Resolves "No tracked message found for SentMessageEvent" warnings
+- Messages sent without explicit bundle tracking are now automatically tracked
+- Proper handling of edge cases where Mailer is used directly
+
+### Changed
+- MailerEventSubscriber now creates tracking records for any email that wasn't previously tracked
+- Enhanced logging with contextual information for debugging
+- Auto-tracked messages include metadata indicating their source
+
+### Developer Experience
+- `mailer:test` command now works seamlessly with the notification tracker
+- No more warnings when using Symfony Mailer directly
+- All email sending methods are now automatically tracked
+
 ## [0.1.11] - 2025-09-19
 
 ### Fixed
