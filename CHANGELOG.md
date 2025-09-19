@@ -7,13 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.0] - 2025-09-19
+
 ### Added
-- Initial release of NotificationTrackerBundle
+- Initial pre-release of NotificationTrackerBundle
 - Multi-channel notification tracking (Email, SMS, Slack, Telegram, Push)
 - Native Symfony Mailer and Notifier integration
-- Comprehensive webhook support for major providers
+- Comprehensive webhook support for major providers (SendGrid, Twilio, Mailgun, Mailchimp)
 - File attachment handling and tracking
-- Template management system
+- Template management system with multi-language support
 - Async processing with Symfony Messenger
 - API Platform integration for REST/GraphQL APIs
 - Real-time analytics and reporting
@@ -21,18 +23,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - IP whitelisting for webhooks
 - Retry mechanism for failed messages
 - Event-driven architecture with custom events
-
-### Features
-- Support for SendGrid, Twilio, Mailgun, Mailchimp webhooks
-- Complete message lifecycle tracking
-- Multi-language template support
 - Advanced recipient management
 - Content versioning and structured data support
 - Comprehensive repository layer with optimized queries
 - Docker support for development
 - Extensive documentation and examples
 
-## [1.0.0] - 2025-09-19
-
-### Added
-- Initial public release
+### Features
+- Complete message lifecycle tracking
+- Multi-format content support (text, HTML, structured data)
+- Advanced search and filtering capabilities
+- Statistical analysis and reporting
+- Security features (signature verification, IP whitelisting)
+- Configurable retry policies
+- Template variable substitution
+- Webhook endpoint management
