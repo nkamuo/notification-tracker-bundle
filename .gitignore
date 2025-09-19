@@ -1,2 +1,56 @@
-./vendor
-/vendor
+# Dependencies
+/vendor/
+/node_modules/
+
+# IDE
+/.idea/
+/.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs
+*.log
+/var/log/
+
+# Cache
+/var/cache/
+/.phpunit.cache/
+
+# Build artifacts
+/build/
+/coverage/
+/.php-cs-fixer.cache
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Test databases
+/tests/test.db
+/tests/test.db-journal
+
+# PHPUnit
+phpunit.xml
+/.phpunit.result.cache
+
+# Composer
+composer.phar
+
+# Symfony
+/public/bundles/
+/var/
+/bin/
+!/bin/console
+
+# Documentation build
+/docs/_build/
