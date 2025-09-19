@@ -47,31 +47,31 @@ use Symfony\Component\Validator\Constraints as Assert;
     denormalizationContext: ['groups' => ['message:write']],
     operations: [
         new GetCollection(
-            uriTemplate: ApiRoutes::getMessage(),
+            uriTemplate: ApiRoutes::MESSAGES,
             normalizationContext: ['groups' => ['message:list']],
             paginationItemsPerPage: 25,
             paginationMaximumItemsPerPage: 100,
             paginationPartial: true
         ),
         new Get(
-            uriTemplate: ApiRoutes::getMessage('/{id}'),
+            uriTemplate: ApiRoutes::MESSAGES . '/{id}',
             requirements: ['id' => '[0-9A-HJKMNP-TV-Z]{26}'],
             normalizationContext: ['groups' => ['message:detail']]
         ),
         new Post(
-            uriTemplate: ApiRoutes::getMessage('/{id}/retry'),
+            uriTemplate: ApiRoutes::MESSAGES . '/{id}/retry',
             requirements: ['id' => '[0-9A-HJKMNP-TV-Z]{26}'],
             controller: RetryMessageController::class,
             name: 'notification_tracker_retry_message'
         ),
         new Post(
-            uriTemplate: ApiRoutes::getMessage('/{id}/cancel'),
+            uriTemplate: ApiRoutes::MESSAGES . '/{id}/cancel',
             requirements: ['id' => '[0-9A-HJKMNP-TV-Z]{26}'],
             controller: CancelMessageController::class,
             name: 'notification_tracker_cancel_message'
         ),
         new Delete(
-            uriTemplate: ApiRoutes::getMessage('/{id}'),
+            uriTemplate: ApiRoutes::MESSAGES . '/{id}',
             requirements: ['id' => '[0-9A-HJKMNP-TV-Z]{26}']
         ),
     ]

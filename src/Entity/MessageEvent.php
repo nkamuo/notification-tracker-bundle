@@ -22,7 +22,7 @@ use Symfony\Component\Uid\Ulid;
     description: 'Message lifecycle events',
     operations: [
         new GetCollection(
-            uriTemplate: ApiRoutes::getMessage('/{id}/events'),
+            uriTemplate: ApiRoutes::MESSAGES . '/{id}/events',
             requirements: ['id' => '[0-9A-HJKMNP-TV-Z]{26}'],
             normalizationContext: ['groups' => ['event:read']]
         ),

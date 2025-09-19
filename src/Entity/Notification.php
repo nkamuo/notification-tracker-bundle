@@ -30,14 +30,14 @@ use Symfony\Component\Uid\Ulid;
     denormalizationContext: ['groups' => ['notification:write']],
     operations: [
         new GetCollection(
-            uriTemplate: ApiRoutes::getNotification(),
+            uriTemplate: ApiRoutes::NOTIFICATIONS,
             normalizationContext: ['groups' => ['notification:list']],
             paginationItemsPerPage: 20,
             paginationMaximumItemsPerPage: 100,
             paginationPartial: true
         ),
         new Get(
-            uriTemplate: ApiRoutes::getNotification('/{id}'),
+            uriTemplate: ApiRoutes::NOTIFICATIONS . '/{id}',
             requirements: ['id' => '[0-9A-HJKMNP-TV-Z]{26}'],
             normalizationContext: ['groups' => ['notification:detail']]
         ),

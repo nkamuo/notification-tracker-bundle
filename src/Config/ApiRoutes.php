@@ -16,16 +16,16 @@ final class ApiRoutes
     public const BASE_PREFIX = '/notification-tracker';
 
     /**
-     * Individual resource prefixes (relative to BASE_PREFIX)
+     * Individual resource prefixes (can be used directly in attributes)
      */
-    public const NOTIFICATIONS = self::BASE_PREFIX . '/notifications';
-    public const MESSAGES = self::BASE_PREFIX . '/messages';
-    public const TEMPLATES = self::BASE_PREFIX . '/templates';
-    public const EVENTS = self::BASE_PREFIX . '/events';
-    public const RECIPIENTS = self::BASE_PREFIX . '/recipients';
-    public const WEBHOOKS = self::BASE_PREFIX . '/webhooks';
-    public const STATISTICS = self::BASE_PREFIX . '/statistics';
-    public const ATTACHMENTS = self::BASE_PREFIX . '/attachments';
+    public const NOTIFICATIONS = '/notification-tracker/notifications';
+    public const MESSAGES = '/notification-tracker/messages';
+    public const TEMPLATES = '/notification-tracker/templates';
+    public const EVENTS = '/notification-tracker/events';
+    public const RECIPIENTS = '/notification-tracker/recipients';
+    public const WEBHOOKS = '/notification-tracker/webhooks';
+    public const STATISTICS = '/notification-tracker/statistics';
+    public const ATTACHMENTS = '/notification-tracker/attachments';
 
     /**
      * Get the full route for a specific resource endpoint

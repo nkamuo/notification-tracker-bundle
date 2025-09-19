@@ -29,22 +29,22 @@ use Symfony\Component\Validator\Constraints as Assert;
     denormalizationContext: ['groups' => ['template:write']],
     operations: [
         new GetCollection(
-            uriTemplate: ApiRoutes::getTemplate(),
+            uriTemplate: ApiRoutes::TEMPLATES,
             normalizationContext: ['groups' => ['template:list']]
         ),
         new Get(
-            uriTemplate: ApiRoutes::getTemplate('/{id}'),
+            uriTemplate: ApiRoutes::TEMPLATES . '/{id}',
             requirements: ['id' => '[0-9A-HJKMNP-TV-Z]{26}']
         ),
         new Post(
-            uriTemplate: ApiRoutes::getTemplate()
+            uriTemplate: ApiRoutes::TEMPLATES
         ),
         new Put(
-            uriTemplate: ApiRoutes::getTemplate('/{id}'),
+            uriTemplate: ApiRoutes::TEMPLATES . '/{id}',
             requirements: ['id' => '[0-9A-HJKMNP-TV-Z]{26}']
         ),
         new Delete(
-            uriTemplate: ApiRoutes::getTemplate('/{id}'),
+            uriTemplate: ApiRoutes::TEMPLATES . '/{id}',
             requirements: ['id' => '[0-9A-HJKMNP-TV-Z]{26}']
         ),
     ]
