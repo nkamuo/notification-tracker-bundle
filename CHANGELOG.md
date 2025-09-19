@@ -45,6 +45,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.9] - 2025-09-19
+
+### Fixed
+- Fixed Monolog logger service injection issues that caused installation failures
+- Replaced explicit logger service injection with tag-based channel assignment
+- Use autowiring for LoggerInterface in all services instead of specific logger services
+- Updated Monolog channel names to use underscores instead of dots for consistency
+- Resolves "non-existent service monolog.logger.notification_tracker.mailer" error during cache:clear
+
+### Changed
+- All services now use '@logger' autowiring with proper Monolog channel tags
+- Updated service configurations in tracking.yaml, event_subscribers.yaml, and message_handlers.yaml
+- Simplified logger dependency injection across the bundle
+
 ## [0.1.8] - 2025-09-19
 
 ### Fixed
