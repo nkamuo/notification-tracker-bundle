@@ -7,6 +7,7 @@ namespace Nkamuo\NotificationTrackerBundle\Entity;
 use ApiPlatform\Metadata\ApiResource;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Nkamuo\NotificationTrackerBundle\Config\ApiRoutes;
 use Nkamuo\NotificationTrackerBundle\Repository\PushMessageRepository;
 use Symfony\Component\Serializer\Annotation\Groups;
 
@@ -17,6 +18,7 @@ use Symfony\Component\Serializer\Annotation\Groups;
     description: 'Push notification tracking',
     normalizationContext: ['groups' => ['message:read', 'push:read']],
     denormalizationContext: ['groups' => ['message:write', 'push:write']],
+    routePrefix: ApiRoutes::BASE_PREFIX,
 )]
 class PushMessage extends Message
 {

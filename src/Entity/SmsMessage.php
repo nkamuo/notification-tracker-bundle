@@ -7,6 +7,7 @@ namespace Nkamuo\NotificationTrackerBundle\Entity;
 use ApiPlatform\Metadata\ApiResource;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Nkamuo\NotificationTrackerBundle\Config\ApiRoutes;
 use Nkamuo\NotificationTrackerBundle\Repository\SmsMessageRepository;
 use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Validator\Constraints as Assert;
@@ -18,6 +19,7 @@ use Symfony\Component\Validator\Constraints as Assert;
     description: 'SMS message tracking',
     normalizationContext: ['groups' => ['message:read', 'sms:read']],
     denormalizationContext: ['groups' => ['message:write', 'sms:write']],
+    routePrefix: ApiRoutes::BASE_PREFIX,
 )]
 class SmsMessage extends Message
 {

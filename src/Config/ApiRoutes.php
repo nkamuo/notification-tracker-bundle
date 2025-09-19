@@ -27,6 +27,14 @@ final class ApiRoutes
     public const STATISTICS = '/notification-tracker/statistics';
     public const ATTACHMENTS = '/notification-tracker/attachments';
 
+    // >>> DIFFERENT MESSAGE TYPES
+
+    public const EMAIL_MESSAGES = '/notification-tracker/email-messages';
+    public const SMS_MESSAGES = '/notification-tracker/sms-messages';
+    public const PUSH_MESSAGES = '/notification-tracker/push-messages';
+
+    // <<< DIFFERENT MESSAGE TYPES
+
     /**
      * Get the full route for a specific resource endpoint
      */
