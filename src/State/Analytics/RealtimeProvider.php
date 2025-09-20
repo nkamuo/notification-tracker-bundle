@@ -94,13 +94,13 @@ class RealtimeProvider implements ProviderInterface
     {
         // Get recent message events
         $recentEvents = $this->entityManager->createQueryBuilder()
-            ->select('e.type, e.createdAt, m.type as channel, n.type as notificationType')
+            ->select('e.eventType, e.occurredAt, m.type as channel, n.type as notificationType')
             ->from('Nkamuo\NotificationTrackerBundle\Entity\MessageEvent', 'e')
             ->join('e.message', 'm')
             ->join('m.notification', 'n')
-            ->where('e.createdAt >= :since')
+            ->where('e.occurredAt >= :since')
             ->setParameter('since', new \DateTime('-10 minutes'))
-            ->orderBy('e.createdAt', 'DESC')
+            ->orderBy('e.occurredAt', 'DESC')
             ->setMaxResults(20)
             ->getQuery()
             ->getResult();
@@ -109,11 +109,11 @@ class RealtimeProvider implements ProviderInterface
         $activity = [];
         foreach ($recentEvents as $event) {
             $activity[] = [
-                'type' => $event['type'],
+                'type' => $event['eventType'],
                 'channel' => $event['channel'],
                 'notificationType' => $event['notificationType'],
-                'timestamp' => $event['createdAt']->format('c'),
-                'timeAgo' => $this->timeAgo($event['createdAt'])
+                'timestamp' => $event['occurredAt']->format('c'),
+                'timeAgo' => $this->timeAgo($event['occurredAt'])
             ];
         }
 

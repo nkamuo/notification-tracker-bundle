@@ -1,6 +1,135 @@
-# Notification Tracker Bundle
+# 📚 Custom Notification Transport Documentation
 
-Notification and email tracking bundle for Symfony 7.3+ with webhook support, file attachments, templates, and comprehensive analytics.
+Welcome to the **Custom Notification Transport** documentation! This transport provides enhanced control and rich analytics for Symfony Messenger notifications.
+
+## 📋 Documentation Overview
+
+### 🚀 [Quick Start Guide](USAGE_GUIDE.md)
+Complete step-by-step guide to integrate and use the transport in your application.
+
+**What you'll learn:**
+- Installation and setup
+- Basic configuration
+- Message dispatching with stamps
+- Monitoring and analytics
+
+### 🔧 [Configuration Examples](CONFIGURATION_EXAMPLES.md)
+Real-world configuration patterns and best practices.
+
+**What you'll learn:**
+- Multi-provider setups
+- Environment-specific configurations
+- Performance optimization
+- Advanced usage patterns
+
+### ✅ [Test Documentation](TESTS_COMPLETE.md)
+Complete test results and validation summary.
+
+**What you'll learn:**
+- Test coverage details
+- Validation scenarios
+- Performance benchmarks
+- Production readiness
+
+### 🏗️ [Implementation Summary](TRANSPORT_COMPLETE.md)
+Technical overview of the complete implementation.
+
+**What you'll learn:**
+- Architecture decisions
+- Feature overview
+- API endpoints
+- Integration points
+
+## 🎯 Key Features
+
+### Enhanced Message Control
+- **Provider-Aware Routing**: Route messages by notification type (email, SMS, push)
+- **Priority-Based Processing**: Control message processing order
+- **Batch Processing**: Efficient handling of high-volume operations
+- **Custom Retry Strategies**: Configurable retry logic with exponential backoff
+
+### Rich Analytics & Monitoring
+- **Real-time Queue Statistics**: Live monitoring of message processing
+- **Campaign Performance Tracking**: Track success rates by campaign
+- **Provider Performance Metrics**: Compare different notification channels
+- **API Platform Integration**: RESTful endpoints for monitoring
+
+### Flexible Configuration
+- **DSN-Based Setup**: Configure via connection strings with query parameters
+- **Environment-Specific**: Different configs for dev/staging/production
+- **Validation & Security**: Comprehensive input validation and error handling
+
+## 🚀 Quick Reference
+
+### Basic DSN Configuration
+```yaml
+framework:
+  messenger:
+    transports:
+      notification_email:
+        dsn: 'notification-tracking://doctrine?transport_name=email&analytics_enabled=true'
+```
+
+### Message Dispatching
+```php
+$messageBus->dispatch($message, [
+    new NotificationProviderStamp('email', 10),        // Provider + priority
+    new NotificationCampaignStamp('welcome-series'),    // Campaign tracking
+    new NotificationTemplateStamp('welcome-email')     // Template correlation
+]);
+```
+
+### API Endpoints
+- `GET /api/queue/messages` - List queued messages
+- `GET /api/queue/stats` - Queue analytics
+- `GET /api/queue/health` - Health monitoring
+
+## 📊 DSN Parameters Reference
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `transport_name` | string | 'default' | Transport identifier |
+| `queue_name` | string | 'default' | Internal queue name |
+| `analytics_enabled` | boolean | true | Enable analytics collection |
+| `provider_aware_routing` | boolean | false | Route by notification provider |
+| `batch_size` | integer (1-100) | 10 | Messages processed per batch |
+| `max_retries` | integer (0-10) | 3 | Maximum retry attempts |
+| `retry_delays` | string | '1000,5000,30000' | Comma-separated delays in ms |
+
+## 🔗 External Links
+
+- [Symfony Messenger Documentation](https://symfony.com/doc/current/messenger.html)
+- [API Platform Documentation](https://api-platform.com/docs/)
+- [Doctrine ORM Documentation](https://www.doctrine-project.org/projects/orm.html)
+
+## 🤝 Support
+
+### Common Use Cases
+1. **E-commerce Notifications**: Order confirmations, shipping updates, promotional emails
+2. **User Engagement**: Welcome series, re-engagement campaigns, newsletters
+3. **Transactional Messages**: Password resets, account verification, billing notifications
+4. **Multi-channel Marketing**: Coordinated email, SMS, and push campaigns
+
+### Performance Guidelines
+- **Small Volume** (< 1K/hour): Default settings work well
+- **Medium Volume** (1K-10K/hour): Increase batch_size to 25-50
+- **High Volume** (> 10K/hour): Use bulk transport with batch_size=100, analytics_enabled=false
+
+### Troubleshooting
+- Check worker processes are running
+- Monitor queue health endpoints
+- Review error logs for failed messages
+- Validate DSN configuration parameters
+
+---
+
+## 🎉 Ready to Get Started?
+
+1. **First Time Users**: Start with the [Usage Guide](USAGE_GUIDE.md)
+2. **Advanced Setup**: Check [Configuration Examples](CONFIGURATION_EXAMPLES.md)
+3. **Validation**: Review [Test Results](TESTS_COMPLETE.md)
+
+**Your enhanced notification system with rich analytics is ready to deploy!** 🚀
 
 ## Features
 

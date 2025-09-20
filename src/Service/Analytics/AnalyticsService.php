@@ -144,15 +144,15 @@ class AnalyticsService
         
         // Get engagement events
         $qb = $this->entityManager->createQueryBuilder()
-            ->select('e.type, COUNT(e.id) as count, COUNT(DISTINCT r.id) as uniqueRecipients')
+            ->select('e.eventType, COUNT(e.id) as count, COUNT(DISTINCT r.id) as uniqueRecipients')
             ->from('Nkamuo\NotificationTrackerBundle\Entity\MessageEvent', 'e')
             ->join('e.recipient', 'r')
             ->join('e.message', 'm')
-            ->where('e.createdAt >= :startDate')
-            ->andWhere('e.createdAt <= :endDate')
+            ->where('e.occurredAt >= :startDate')
+            ->andWhere('e.occurredAt <= :endDate')
             ->setParameter('startDate', $dateRange['start'])
             ->setParameter('endDate', $dateRange['end'])
-            ->groupBy('e.type');
+            ->groupBy('e.eventType');
 
         $engagementEvents = $qb->getQuery()->getResult();
         
@@ -247,14 +247,14 @@ class AnalyticsService
         // This would typically query a logging system or database
         // For demonstration, we'll query message events as system activity
         $qb = $this->entityManager->createQueryBuilder()
-            ->select('e.id, e.type, e.createdAt, e.metadata, m.type as channel')
+            ->select('e.id, e.eventType, e.occurredAt, e.eventData, m.type as channel')
             ->from('Nkamuo\NotificationTrackerBundle\Entity\MessageEvent', 'e')
             ->join('e.message', 'm')
-            ->where('e.createdAt >= :startDate')
-            ->andWhere('e.createdAt <= :endDate')
+            ->where('e.occurredAt >= :startDate')
+            ->andWhere('e.occurredAt <= :endDate')
             ->setParameter('startDate', $dateRange['start'])
             ->setParameter('endDate', $dateRange['end'])
-            ->orderBy('e.createdAt', 'DESC')
+            ->orderBy('e.occurredAt', 'DESC')
             ->setFirstResult($offset)
             ->setMaxResults($limit);
 
@@ -348,16 +348,16 @@ class AnalyticsService
         // Engagement statistics
         $engagementStats = $this->entityManager->createQueryBuilder()
             ->select('
-                COUNT(DISTINCT CASE WHEN e.type = :opened THEN r.id ELSE NULL END) as uniqueOpens,
-                COUNT(DISTINCT CASE WHEN e.type = :clicked THEN r.id ELSE NULL END) as uniqueClicks,
-                COUNT(CASE WHEN e.type = :opened THEN 1 ELSE NULL END) as totalOpens,
-                COUNT(CASE WHEN e.type = :clicked THEN 1 ELSE NULL END) as totalClicks
+                COUNT(DISTINCT CASE WHEN e.eventType = :opened THEN r.id ELSE NULL END) as uniqueOpens,
+                COUNT(DISTINCT CASE WHEN e.eventType = :clicked THEN r.id ELSE NULL END) as uniqueClicks,
+                COUNT(CASE WHEN e.eventType = :opened THEN 1 ELSE NULL END) as totalOpens,
+                COUNT(CASE WHEN e.eventType = :clicked THEN 1 ELSE NULL END) as totalClicks
             ')
             ->from('Nkamuo\NotificationTrackerBundle\Entity\MessageEvent', 'e')
             ->join('e.recipient', 'r')
             ->join('e.message', 'm')
-            ->where('e.createdAt >= :start')
-            ->andWhere('e.createdAt <= :end')
+            ->where('e.occurredAt >= :start')
+            ->andWhere('e.occurredAt <= :end')
             ->setParameter('start', $dateRange['start'])
             ->setParameter('end', $dateRange['end'])
             ->setParameter('opened', 'opened')
@@ -432,10 +432,10 @@ class AnalyticsService
             ->from('Nkamuo\NotificationTrackerBundle\Entity\MessageEvent', 'e')
             ->join('e.recipient', 'r')
             ->join('e.message', 'm')
-            ->where('e.type IN (:engagementTypes)')
+            ->where('e.eventType IN (:engagementTypes)')
             ->andWhere('m.type = :channel')
-            ->andWhere('e.createdAt >= :start')
-            ->andWhere('e.createdAt <= :end')
+            ->andWhere('e.occurredAt >= :start')
+            ->andWhere('e.occurredAt <= :end')
             ->setParameter('engagementTypes', ['opened', 'clicked'])
             ->setParameter('channel', $channel)
             ->setParameter('start', $dateRange['start'])
