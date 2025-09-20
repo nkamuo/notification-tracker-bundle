@@ -1,0 +1,30 @@
+# Test configuration for notification tracking transport
+framework:
+  test: true
+  session:
+    storage_factory_id: session.storage.factory.mock_file
+  messenger:
+    failure_transport: failed
+    transports:
+      notification_test:
+        dsn: 'notification-tracking://doctrine?transport_name=test_transport&queue_name=test_queue&batch_size=5&analytics_enabled=true&provider_aware_routing=true&max_retries=3'
+      failed: 'doctrine://default?queue_name=failed'
+    routing:
+      'Nkamuo\NotificationTrackerBundle\Tests\Functional\TestNotificationMessage': notification_test
+
+doctrine:
+  dbal:
+    driver: 'pdo_sqlite'
+    url: 'sqlite:///:memory:'
+    charset: utf8mb4
+  orm:
+    auto_generate_proxy_classes: true
+    naming_strategy: doctrine.orm.naming_strategy.underscore_number_aware
+    auto_mapping: true
+    mappings:
+      NotificationTrackerBundle:
+        is_bundle: false
+        type: attribute
+        dir: '%kernel.project_dir%/src/Entity'
+        prefix: 'Nkamuo\NotificationTrackerBundle\Entity'
+        alias: NotificationTrackerBundle

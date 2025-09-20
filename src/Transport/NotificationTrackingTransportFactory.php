@@ -47,6 +47,11 @@ class NotificationTrackingTransportFactory implements TransportFactoryInterface
             throw new InvalidArgumentException(sprintf('Invalid DSN "%s". Expected format: notification-tracking://doctrine?options', $dsn));
         }
 
+        // Validate host
+        if (!isset($parsed['host']) || $parsed['host'] !== 'doctrine') {
+            throw new InvalidArgumentException(sprintf('Invalid DSN "%s". Expected format: notification-tracking://doctrine?options', $dsn));
+        }
+
         // Parse query parameters
         $queryOptions = [];
         if (isset($parsed['query'])) {
@@ -58,7 +63,7 @@ class NotificationTrackingTransportFactory implements TransportFactoryInterface
 
         // Set defaults and validate/convert types
         $parsedOptions = $this->setDefaults($parsedOptions);
-        $parsedOptions = $this->validateAndConvertTypes($parsedOptions);
+        $parsedOptions = $this->validateOptions($parsedOptions);
 
         return $parsedOptions;
     }
@@ -76,13 +81,22 @@ class NotificationTrackingTransportFactory implements TransportFactoryInterface
         ], $options);
     }
 
-    private function validateAndConvertTypes(array $options): array
+    private function validateOptions(array $options): array
     {
         // Convert string booleans to actual booleans
         $booleanOptions = ['analytics_enabled', 'provider_aware_routing'];
         foreach ($booleanOptions as $key) {
             if (isset($options[$key])) {
-                $options[$key] = filter_var($options[$key], FILTER_VALIDATE_BOOLEAN);
+                if (is_string($options[$key])) {
+                    $value = strtolower(trim($options[$key]));
+                    if (in_array($value, ['true', '1', 'yes', 'on'], true)) {
+                        $options[$key] = true;
+                    } elseif (in_array($value, ['false', '0', 'no', 'off'], true)) {
+                        $options[$key] = false;
+                    } else {
+                        throw new InvalidArgumentException(sprintf('Option "%s" must be a boolean, got "%s".', $key, $options[$key]));
+                    }
+                }
             }
         }
 
@@ -103,13 +117,31 @@ class NotificationTrackingTransportFactory implements TransportFactoryInterface
             if (is_string($options['retry_delays'])) {
                 $delays = explode(',', $options['retry_delays']);
                 $options['retry_delays'] = array_map(function ($delay) {
-                    $value = filter_var(trim($delay), FILTER_VALIDATE_INT);
+                    $trimmed = trim($delay);
+                    $value = filter_var($trimmed, FILTER_VALIDATE_INT);
                     if ($value === false) {
-                        throw new InvalidArgumentException(sprintf('Retry delay must be an integer, got "%s".', trim($delay)));
+                        throw new InvalidArgumentException(sprintf('Invalid retry delay "%s". All delays must be positive integers.', $trimmed));
+                    }
+                    if ($value <= 0) {
+                        throw new InvalidArgumentException(sprintf('Invalid retry delay "%s". All delays must be positive integers.', $trimmed));
                     }
                     return $value;
                 }, $delays);
             }
+        }
+
+        // Validate string lengths first
+        if (empty($options['transport_name'])) {
+            throw new InvalidArgumentException('Transport name cannot be empty.');
+        }
+        if (empty($options['queue_name'])) {
+            throw new InvalidArgumentException('Queue name cannot be empty.');
+        }
+        if (strlen($options['transport_name']) > 100) {
+            throw new InvalidArgumentException(sprintf('Transport name must be 100 characters or less, got %d characters.', strlen($options['transport_name'])));
+        }
+        if (strlen($options['queue_name']) > 100) {
+            throw new InvalidArgumentException(sprintf('Queue name must be 100 characters or less, got %d characters.', strlen($options['queue_name'])));
         }
 
         // Validate transport and queue names
