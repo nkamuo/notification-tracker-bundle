@@ -1,3 +1,6 @@
+imports:
+    - { resource: transport.yaml }
+
 services:
     _defaults:
         autowire: true
@@ -6,7 +9,7 @@ services:
     Nkamuo\NotificationTrackerBundle\:
         resource: '../../*'
         exclude:
-            - '../../{DependencyInjection,Entity,Resources,Tests}'
+            - '../../{DependencyInjection,Entity,Resources,Tests,Migration}'
             - '../../NotificationTrackerBundle.php'
 
     # Core Services with proper logger configuration

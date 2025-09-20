@@ -1,0 +1,39 @@
+parameters:
+    # Custom Transport Configuration
+    notification_tracker.transport.default_transport_name: 'notification'
+    notification_tracker.transport.default_queue_name: 'default'
+    notification_tracker.transport.default_batch_size: 10
+    notification_tracker.transport.default_max_retries: 3
+
+services:
+    # Transport Factory
+    Nkamuo\NotificationTrackerBundle\Transport\NotificationTrackingTransportFactory:
+        arguments:
+            $entityManager: '@doctrine.orm.entity_manager'
+            $repository: '@Nkamuo\NotificationTrackerBundle\Repository\QueuedMessageRepository'
+            $analyticsCollector: '@Nkamuo\NotificationTrackerBundle\Service\NotificationAnalyticsCollector'
+        tags:
+            - { name: messenger.transport_factory }
+
+    # Repository
+    Nkamuo\NotificationTrackerBundle\Repository\QueuedMessageRepository:
+        arguments:
+            $registry: '@doctrine'
+        tags:
+            - { name: doctrine.repository_service }
+
+    # Analytics Collector
+    Nkamuo\NotificationTrackerBundle\Service\NotificationAnalyticsCollector:
+        arguments:
+            $entityManager: '@doctrine.orm.entity_manager'
+            $messageTracker: '@Nkamuo\NotificationTrackerBundle\Service\MessageTracker'
+            $logger: '@logger'
+        tags:
+            - { name: monolog.logger, channel: notification_queue }
+
+    # State Provider for API Resources
+    Nkamuo\NotificationTrackerBundle\State\QueueResourceStateProvider:
+        arguments:
+            $entityManager: '@doctrine.orm.entity_manager'
+            $connection: '@doctrine.dbal.default_connection'
+            $queuedMessageRepository: '@Nkamuo\NotificationTrackerBundle\Repository\QueuedMessageRepository'

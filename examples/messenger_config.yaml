@@ -1,0 +1,73 @@
+# Example Messenger Configuration with Notification Tracking Transport
+
+# config/packages/messenger.yaml
+framework:
+    messenger:
+        # Configure multiple transports for different notification types
+        transports:
+            # Email notification queue with analytics
+            notification_email:
+                dsn: 'notification-tracking://doctrine?transport_name=email&queue_name=email_notifications&analytics_enabled=true&provider_aware_routing=true&batch_size=5&max_retries=5&retry_delays=2000,10000,60000'
+                options:
+                    # Additional Symfony messenger options can be added here
+                    auto_setup: true
+                
+            # SMS notification queue with high throughput
+            notification_sms:
+                dsn: 'notification-tracking://doctrine?transport_name=sms&queue_name=sms_notifications&analytics_enabled=true&batch_size=20&max_retries=3'
+                
+            # Push notification queue with fast processing
+            notification_push:
+                dsn: 'notification-tracking://doctrine?transport_name=push&queue_name=push_notifications&analytics_enabled=true&provider_aware_routing=true&batch_size=15'
+            
+            # High priority notification queue
+            notification_priority:
+                dsn: 'notification-tracking://doctrine?transport_name=priority&queue_name=high_priority&analytics_enabled=true&batch_size=3&max_retries=10'
+                
+            # Failed message storage (using built-in Symfony failure transport)
+            notification_failed:
+                dsn: 'doctrine://default?queue_name=notification_failed'
+
+        # Use Symfony's built-in failure transport
+        failure_transport: notification_failed
+        
+        # Route messages to appropriate transports
+        routing:
+            # Email messages
+            'App\Message\EmailNotification': [notification_email]
+            'Symfony\Component\Mailer\Messenger\SendEmailMessage': [notification_email]
+            
+            # SMS messages
+            'App\Message\SmsNotification': [notification_sms]
+            
+            # Push notifications
+            'App\Message\PushNotification': [notification_push]
+            
+            # Priority messages (multiple transports for redundancy)
+            'App\Message\UrgentNotification': [notification_priority, notification_email]
+
+# Example Rate Limiter Configuration
+# config/packages/rate_limiter.yaml
+framework:
+    rate_limiter:
+        # Email rate limiting (respect provider limits)
+        email_rate_limiter:
+            policy: 'token_bucket'
+            limit: 100
+            interval: '1 minute'
+            
+        # SMS rate limiting
+        sms_rate_limiter:
+            policy: 'sliding_window'
+            limit: 50
+            interval: '1 minute'
+
+# Example: How to add rate limiting to your transport
+# Simply add the rate_limiter option to any transport:
+#
+# framework:
+#     messenger:
+#         transports:
+#             notification_email_limited:
+#                 dsn: 'notification-tracking://doctrine?transport_name=email&analytics_enabled=true'
+#                 rate_limiter: email_rate_limiter
