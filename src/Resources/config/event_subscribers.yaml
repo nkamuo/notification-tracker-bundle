@@ -4,6 +4,7 @@ services:
         arguments:
             $messageTracker: '@Nkamuo\NotificationTrackerBundle\Service\MessageTracker'
             $entityManager: '@doctrine.orm.entity_manager'
+            $messageRepository: '@Nkamuo\NotificationTrackerBundle\Repository\MessageRepository'
             $logger: '@logger'
             $enabled: '%notification_tracker.tracking.enabled%'
         tags:
