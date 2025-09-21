@@ -17,5 +17,10 @@ services:
         tags:
             - { name: monolog.logger, channel: notification_tracker }
 
+    # Messenger Middleware for notification tracking stamps
+    Nkamuo\NotificationTrackerBundle\Messenger\Middleware\NotificationTrackingMiddleware:
+        tags:
+            - { name: messenger.middleware }
+
     # Remove repository services - they're auto-configured by Doctrine
     # Just ensure they're tagged properly in the Entity annotations

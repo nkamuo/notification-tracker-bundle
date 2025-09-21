@@ -130,6 +130,16 @@ abstract class Message
     #[Groups(['message:read', 'message:write', 'message:detail'])]
     protected array $metadata = [];
 
+    #[ORM\Column(length: 36, nullable: true)]
+    #[Groups(['message:read', 'message:detail'])]
+    #[ORM\Index(name: 'idx_nt_message_stamp_id')]
+    protected ?string $messengerStampId = null;
+
+    #[ORM\Column(length: 64, nullable: true)]
+    #[Groups(['message:read', 'message:detail'])]
+    #[ORM\Index(name: 'idx_nt_message_fingerprint')]
+    protected ?string $contentFingerprint = null;
+
     #[ORM\Column(type: Types::DATETIME_IMMUTABLE)]
     #[Groups(['message:read', 'message:list', 'message:detail'])]
     protected \DateTimeImmutable $createdAt;
@@ -248,6 +258,28 @@ abstract class Message
     public function addMetadata(string $key, mixed $value): self
     {
         $this->metadata[$key] = $value;
+        return $this;
+    }
+
+    public function getMessengerStampId(): ?string
+    {
+        return $this->messengerStampId;
+    }
+
+    public function setMessengerStampId(?string $messengerStampId): self
+    {
+        $this->messengerStampId = $messengerStampId;
+        return $this;
+    }
+
+    public function getContentFingerprint(): ?string
+    {
+        return $this->contentFingerprint;
+    }
+
+    public function setContentFingerprint(?string $contentFingerprint): self
+    {
+        $this->contentFingerprint = $contentFingerprint;
         return $this;
     }
 

@@ -6,7 +6,7 @@ namespace Nkamuo\NotificationTrackerBundle\Dto\Analytics;
 
 use ApiPlatform\Metadata\ApiResource;
 use ApiPlatform\Metadata\GetCollection;
-use App\NotificationTrackerBundle\State\Analytics\SystemLogsProvider;
+use Nkamuo\NotificationTrackerBundle\State\Analytics\SystemLogsProvider;
 
 #[ApiResource(
     shortName: 'SystemLogs',

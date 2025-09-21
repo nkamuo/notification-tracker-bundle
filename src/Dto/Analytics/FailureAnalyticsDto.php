@@ -6,7 +6,7 @@ namespace Nkamuo\NotificationTrackerBundle\Dto\Analytics;
 
 use ApiPlatform\Metadata\ApiResource;
 use ApiPlatform\Metadata\Get;
-use App\NotificationTrackerBundle\State\Analytics\FailureAnalyticsProvider;
+use Nkamuo\NotificationTrackerBundle\State\Analytics\FailureAnalyticsProvider;
 
 #[ApiResource(
     shortName: 'FailureAnalytics',

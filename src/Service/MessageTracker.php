@@ -70,6 +70,16 @@ class MessageTracker
         $message->setNotification($notification);
         $message->setMetadata($metadata);
         
+        // Extract stamp ID from metadata if available
+        if (isset($metadata['stamp_id'])) {
+            $message->setMessengerStampId($metadata['stamp_id']);
+        }
+        
+        // Extract content fingerprint from metadata if available
+        if (isset($metadata['content_fingerprint'])) {
+            $message->setContentFingerprint($metadata['content_fingerprint']);
+        }
+        
         // Set headers
         $headers = [];
         foreach ($email->getHeaders()->all() as $header) {

@@ -8,11 +8,15 @@ use Nkamuo\NotificationTrackerBundle\Entity\EmailMessage;
 use Nkamuo\NotificationTrackerBundle\Entity\MessageEvent;
 use Nkamuo\NotificationTrackerBundle\Entity\MessageContent;
 use Nkamuo\NotificationTrackerBundle\Service\MessageTracker;
+use Nkamuo\NotificationTrackerBundle\Messenger\Stamp\NotificationTrackingStamp;
+use Nkamuo\NotificationTrackerBundle\Repository\MessageRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\Mailer\Event\FailedMessageEvent;
 use Symfony\Component\Mailer\Event\SentMessageEvent;
+use Symfony\Component\Messenger\Envelope;
+use Symfony\Component\Messenger\Event\SendMessageToTransportsEvent;
 use Symfony\Component\Mime\Email;
 use Symfony\Component\Uid\Ulid;
 
@@ -23,6 +27,7 @@ class MailerEventSubscriber implements EventSubscriberInterface
     public function __construct(
         private readonly MessageTracker $messageTracker,
         private readonly EntityManagerInterface $entityManager,
+        private readonly MessageRepository $messageRepository,
         private readonly LoggerInterface $logger,
         private readonly bool $enabled = true
     ) {
@@ -32,6 +37,7 @@ class MailerEventSubscriber implements EventSubscriberInterface
     {
         return [
             MessageEvent::class => ['onMessage', 100],
+            SendMessageToTransportsEvent::class => ['onSendMessageToTransports', 100],
             SentMessageEvent::class => ['onSentMessage', 0],
             FailedMessageEvent::class => ['onFailedMessage', 0],
         ];
@@ -50,14 +56,43 @@ class MailerEventSubscriber implements EventSubscriberInterface
         }
 
         try {
-            // Check if already tracked
+            // Check if already tracked by custom X-Tracking-ID header first
             $trackingId = $this->getTrackingId($message);
-            if ($trackingId && $this->findTrackedMessage($trackingId)) {
-                $this->logger->debug('Message already tracked', ['tracking_id' => $trackingId]);
+            if ($trackingId && $trackedMessage = $this->findTrackedMessage($trackingId)) {
+                $this->logger->debug('Message already tracked via X-Tracking-ID', ['tracking_id' => $trackingId]);
+                
+                // Map for later reference and add retry event
+                $messageId = spl_object_id($message);
+                $this->messageMap[$messageId] = $trackedMessage;
+                
+                // Add retry event
+                $this->messageTracker->addEvent(
+                    $trackedMessage,
+                    MessageEvent::TYPE_QUEUED,
+                    [
+                        'retry_attempt' => true,
+                        'transport' => $this->extractTransportName($event),
+                        'symfony_event' => 'MessageEvent',
+                    ]
+                );
+                
+                $this->logger->info('Email retry tracked', [
+                    'tracking_id' => (string) $trackedMessage->getId(),
+                    'subject' => $message->getSubject(),
+                ]);
                 return;
             }
 
-            // Create tracking entity
+            // Generate content fingerprint for analytics purposes
+            $contentFingerprint = $this->generateContentFingerprint($message);
+
+            // Check for stamp ID in headers (set by middleware)
+            $stampId = null;
+            if ($message->getHeaders()->has('X-Stamp-ID')) {
+                $stampId = $message->getHeaders()->get('X-Stamp-ID')->getBodyAsString();
+            }
+
+            // Create new tracking entity for first attempt
             $trackedMessage = $this->messageTracker->trackEmail(
                 $message,
                 $this->extractTransportName($event),
@@ -65,6 +100,8 @@ class MailerEventSubscriber implements EventSubscriberInterface
                 [
                     'queued' => $event->isQueued(),
                     'symfony_event' => 'MessageEvent',
+                    'content_fingerprint' => $contentFingerprint,
+                    'stamp_id' => $stampId,
                 ]
             );
 
@@ -84,6 +121,59 @@ class MailerEventSubscriber implements EventSubscriberInterface
             $this->logger->error('Failed to track email in MessageEvent', [
                 'error' => $e->getMessage(),
                 'subject' => $message->getSubject(),
+            ]);
+        }
+    }
+
+    public function onSendMessageToTransports(SendMessageToTransportsEvent $event): void
+    {
+        if (!$this->enabled) {
+            return;
+        }
+
+        $envelope = $event->getEnvelope();
+        $stamp = $envelope->last(NotificationTrackingStamp::class);
+        
+        if (!$stamp) {
+            // No stamp found, this shouldn't happen if middleware is working
+            $this->logger->warning('No NotificationTrackingStamp found in envelope');
+            return;
+        }
+
+        try {
+            // Check if we already have a message with this stamp ID
+            $existingMessage = $this->messageRepository->findByStampId($stamp->getId());
+            
+            if ($existingMessage) {
+                // This is a retry - add a retry event
+                $this->messageTracker->addEvent(
+                    $existingMessage,
+                    \Nkamuo\NotificationTrackerBundle\Entity\MessageEvent::TYPE_QUEUED,
+                    [
+                        'retry_attempt' => true,
+                        'stamp_id' => $stamp->getId(),
+                        'symfony_event' => 'SendMessageToTransportsEvent',
+                        'transports' => array_keys($event->getSenders()),
+                    ]
+                );
+                
+                $this->logger->info('Message retry detected via stamp', [
+                    'stamp_id' => $stamp->getId(),
+                    'tracking_id' => (string) $existingMessage->getId(),
+                    'message_type' => get_class($envelope->getMessage()),
+                ]);
+            } else {
+                // This is a new message - we'll track it when the actual email event fires
+                $this->logger->debug('New message with stamp detected', [
+                    'stamp_id' => $stamp->getId(),
+                    'message_type' => get_class($envelope->getMessage()),
+                ]);
+            }
+            
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to process message stamp', [
+                'error' => $e->getMessage(),
+                'stamp_id' => $stamp->getId(),
             ]);
         }
     }
@@ -289,5 +379,21 @@ class MailerEventSubscriber implements EventSubscriberInterface
             ]);
             return null;
         }
+    }
+
+    private function generateContentFingerprint(Email $message): string
+    {
+        // Create a hash based on message content that should be consistent across retries
+        $content = [
+            'subject' => $message->getSubject(),
+            'from' => $message->getFrom() ? $message->getFrom()[0]->toString() : '',
+            'to' => array_map(fn($addr) => $addr->toString(), $message->getTo()),
+            'cc' => array_map(fn($addr) => $addr->toString(), $message->getCc()),
+            'bcc' => array_map(fn($addr) => $addr->toString(), $message->getBcc()),
+            'text_body' => $message->getTextBody(),
+            'html_body' => $message->getHtmlBody(),
+        ];
+        
+        return hash('sha256', serialize($content));
     }
 }

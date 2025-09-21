@@ -374,4 +374,44 @@ class MessageRepository extends ServiceEntityRepository
             ->getQuery()
             ->execute();
     }
+
+    /**
+     * Find a message by its messenger stamp ID
+     */
+    public function findByStampId(string $stampId): ?Message
+    {
+        return $this->createQueryBuilder('m')
+            ->andWhere('m.messengerStampId = :stampId')
+            ->setParameter('stampId', $stampId)
+            ->getQuery()
+            ->getOneOrNullResult();
+    }
+
+    /**
+     * Find messages by content fingerprint
+     *
+     * @return Message[]
+     */
+    public function findByFingerprint(string $fingerprint): array
+    {
+        return $this->createQueryBuilder('m')
+            ->andWhere('m.contentFingerprint = :fingerprint')
+            ->setParameter('fingerprint', $fingerprint)
+            ->orderBy('m.sentAt', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
+     * Check if a message with the given stamp ID exists
+     */
+    public function existsByStampId(string $stampId): bool
+    {
+        return $this->createQueryBuilder('m')
+            ->select('COUNT(m.id)')
+            ->andWhere('m.messengerStampId = :stampId')
+            ->setParameter('stampId', $stampId)
+            ->getQuery()
+            ->getSingleScalarResult() > 0;
+    }
 }

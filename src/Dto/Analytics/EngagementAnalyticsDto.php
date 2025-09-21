@@ -6,7 +6,7 @@ namespace Nkamuo\NotificationTrackerBundle\Dto\Analytics;
 
 use ApiPlatform\Metadata\ApiResource;
 use ApiPlatform\Metadata\Get;
-use App\NotificationTrackerBundle\State\Analytics\EngagementAnalyticsProvider;
+use Nkamuo\NotificationTrackerBundle\State\Analytics\EngagementAnalyticsProvider;
 
 #[ApiResource(
     shortName: 'EngagementAnalytics',

@@ -6,7 +6,7 @@ namespace Nkamuo\NotificationTrackerBundle\Dto\Analytics;
 
 use ApiPlatform\Metadata\ApiResource;
 use ApiPlatform\Metadata\Get;
-use App\NotificationTrackerBundle\State\Analytics\CostAnalyticsProvider;
+use Nkamuo\NotificationTrackerBundle\State\Analytics\CostAnalyticsProvider;
 
 #[ApiResource(
     shortName: 'CostAnalytics',
