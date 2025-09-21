@@ -2,9 +2,15 @@ name: CI
 
 on:
   push:
-    branches: [ master, develop ]
+    branches: 
+        - nil
+        # - master
+        # - develop
   pull_request:
-    branches: [ master, develop ]
+    branches: 
+        - nil
+        #  - master
+        #  - develop
 
 jobs:
   test:

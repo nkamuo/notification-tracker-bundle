@@ -357,14 +357,48 @@ class MailerEventSubscriber implements EventSubscriberInterface
 
     private function getTrackedMessage(Email $message): ?EmailMessage
     {
+        // 1. Check object ID mapping first (fastest)
         $messageId = spl_object_id($message);
         if (isset($this->messageMap[$messageId])) {
             return $this->messageMap[$messageId];
         }
 
+        // 2. Check for X-Tracking-ID header
         $trackingId = $this->getTrackingId($message);
         if ($trackingId) {
             return $this->findTrackedMessage($trackingId);
+        }
+
+        // 3. Check for stamp ID header (for middleware-tracked messages)
+        if ($message->getHeaders()->has('X-Stamp-ID')) {
+            $stampId = $message->getHeaders()->get('X-Stamp-ID')->getBodyAsString();
+            $trackedMessage = $this->messageRepository->findByStampId($stampId);
+            if ($trackedMessage) {
+                return $trackedMessage;
+            }
+        }
+
+        // 4. Last resort: content-based lookup (for direct mailer usage like mailer:test)
+        $contentFingerprint = $this->generateContentFingerprint($message);
+        
+        // Look for messages with same content fingerprint created recently (within 5 minutes)
+        $recentThreshold = new \DateTime('-5 minutes');
+        $trackedMessage = $this->messageRepository->findRecentByContentFingerprint(
+            $contentFingerprint, 
+            $recentThreshold
+        );
+        
+        if ($trackedMessage) {
+            $this->logger->debug('Found message via content fingerprint', [
+                'tracking_id' => (string) $trackedMessage->getId(),
+                'content_fingerprint' => $contentFingerprint,
+                'subject' => $message->getSubject(),
+            ]);
+            
+            // Add to object map for future lookups
+            $this->messageMap[$messageId] = $trackedMessage;
+            
+            return $trackedMessage;
         }
 
         return null;

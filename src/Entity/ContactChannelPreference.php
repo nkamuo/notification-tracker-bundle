@@ -828,11 +828,11 @@ class ContactChannelPreference
             case self::FREQUENCY_IMMEDIATE:
                 return true;
             case self::FREQUENCY_HOURLY:
-                return $this->messagesThisHour < $this->getMaxMessagesPerHour();
+                return $this->messagesThisHour < $this->calculateMaxMessagesPerHour();
             case self::FREQUENCY_DAILY:
-                return $this->messagesToday < $this->getMaxMessagesPerDay();
+                return $this->messagesToday < $this->calculateMaxMessagesPerDay();
             case self::FREQUENCY_WEEKLY:
-                return $this->messagesThisWeek < $this->getMaxMessagesPerWeek();
+                return $this->messagesThisWeek < $this->calculateMaxMessagesPerWeek();
             case self::FREQUENCY_MONTHLY:
                 return $this->getMessagesThisMonth() < $this->getMaxMessagesPerMonth();
             default:
@@ -859,9 +859,9 @@ class ContactChannelPreference
     }
 
     /**
-     * Get max messages per hour based on frequency setting
+     * Calculate max messages per hour based on frequency setting
      */
-    private function getMaxMessagesPerHour(): int
+    private function calculateMaxMessagesPerHour(): int
     {
         switch ($this->frequency) {
             case self::FREQUENCY_HOURLY:
@@ -876,9 +876,9 @@ class ContactChannelPreference
     }
 
     /**
-     * Get max messages per day based on frequency setting
+     * Calculate max messages per day based on frequency setting
      */
-    private function getMaxMessagesPerDay(): int
+    private function calculateMaxMessagesPerDay(): int
     {
         switch ($this->frequency) {
             case self::FREQUENCY_DAILY:
@@ -895,9 +895,9 @@ class ContactChannelPreference
     }
 
     /**
-     * Get max messages per week based on frequency setting
+     * Calculate max messages per week based on frequency setting
      */
-    private function getMaxMessagesPerWeek(): int
+    private function calculateMaxMessagesPerWeek(): int
     {
         switch ($this->frequency) {
             case self::FREQUENCY_WEEKLY:
