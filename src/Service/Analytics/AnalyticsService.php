@@ -345,25 +345,67 @@ class AnalyticsService
             ->getQuery()
             ->getOneOrNullResult();
 
-        // Engagement statistics
-        $engagementStats = $this->entityManager->createQueryBuilder()
-            ->select('
-                COUNT(DISTINCT CASE WHEN e.eventType = :opened THEN r.id ELSE NULL END) as uniqueOpens,
-                COUNT(DISTINCT CASE WHEN e.eventType = :clicked THEN r.id ELSE NULL END) as uniqueClicks,
-                COUNT(CASE WHEN e.eventType = :opened THEN 1 ELSE NULL END) as totalOpens,
-                COUNT(CASE WHEN e.eventType = :clicked THEN 1 ELSE NULL END) as totalClicks
-            ')
+        // Engagement statistics - using subqueries for better NULL handling
+        $openQuery = $this->entityManager->createQueryBuilder()
+            ->select('COUNT(DISTINCT r.id)')
             ->from('Nkamuo\NotificationTrackerBundle\Entity\MessageEvent', 'e')
             ->join('e.recipient', 'r')
             ->join('e.message', 'm')
             ->where('e.occurredAt >= :start')
             ->andWhere('e.occurredAt <= :end')
+            ->andWhere('e.eventType = :opened')
             ->setParameter('start', $dateRange['start'])
             ->setParameter('end', $dateRange['end'])
             ->setParameter('opened', 'opened')
+            ->getQuery()
+            ->getSingleScalarResult();
+
+        $clickQuery = $this->entityManager->createQueryBuilder()
+            ->select('COUNT(DISTINCT r.id)')
+            ->from('Nkamuo\NotificationTrackerBundle\Entity\MessageEvent', 'e')
+            ->join('e.recipient', 'r')
+            ->join('e.message', 'm')
+            ->where('e.occurredAt >= :start')
+            ->andWhere('e.occurredAt <= :end')
+            ->andWhere('e.eventType = :clicked')
+            ->setParameter('start', $dateRange['start'])
+            ->setParameter('end', $dateRange['end'])
             ->setParameter('clicked', 'clicked')
             ->getQuery()
-            ->getOneOrNullResult();
+            ->getSingleScalarResult();
+
+        $totalOpenQuery = $this->entityManager->createQueryBuilder()
+            ->select('COUNT(e.id)')
+            ->from('Nkamuo\NotificationTrackerBundle\Entity\MessageEvent', 'e')
+            ->join('e.message', 'm')
+            ->where('e.occurredAt >= :start')
+            ->andWhere('e.occurredAt <= :end')
+            ->andWhere('e.eventType = :opened')
+            ->setParameter('start', $dateRange['start'])
+            ->setParameter('end', $dateRange['end'])
+            ->setParameter('opened', 'opened')
+            ->getQuery()
+            ->getSingleScalarResult();
+
+        $totalClickQuery = $this->entityManager->createQueryBuilder()
+            ->select('COUNT(e.id)')
+            ->from('Nkamuo\NotificationTrackerBundle\Entity\MessageEvent', 'e')
+            ->join('e.message', 'm')
+            ->where('e.occurredAt >= :start')
+            ->andWhere('e.occurredAt <= :end')
+            ->andWhere('e.eventType = :clicked')
+            ->setParameter('start', $dateRange['start'])
+            ->setParameter('end', $dateRange['end'])
+            ->setParameter('clicked', 'clicked')
+            ->getQuery()
+            ->getSingleScalarResult();
+
+        $engagementStats = [
+            'uniqueOpens' => (int) $openQuery,
+            'uniqueClicks' => (int) $clickQuery,
+            'totalOpens' => (int) $totalOpenQuery,
+            'totalClicks' => (int) $totalClickQuery,
+        ];
 
         $total = $messageStats['total'] ?? 0;
         $delivered = $messageStats['delivered'] ?? 0;
