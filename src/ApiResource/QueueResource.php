@@ -36,115 +36,123 @@ use Symfony\Component\Serializer\Annotation\Groups;
             provider: QueueResourceStateProvider::class,
             normalizationContext: ['groups' => ['queue:health']]
         )
-    ]
+        ],
+    routePrefix: '/notification-tracker'
 )]
 class QueueResource
 {
     #[Groups(['queue:read', 'queue:list', 'queue:item'])]
-    public string $id;
+    public ?string $id = null;
 
     #[Groups(['queue:read', 'queue:list', 'queue:item'])]
-    public string $transport;
+    public ?string $transport = null;
 
     #[Groups(['queue:read', 'queue:list', 'queue:item'])]
-    public string $queueName;
+    public ?string $queueName = null;
 
     #[Groups(['queue:read', 'queue:item'])]
-    public string $body;
+    public ?string $body = null;
 
     #[Groups(['queue:read', 'queue:item'])]
-    public array $headers;
+    public ?array $headers = null;
 
     #[Groups(['queue:read', 'queue:list', 'queue:item'])]
-    public \DateTimeImmutable $createdAt;
+    public ?\DateTimeImmutable $createdAt = null;
 
     #[Groups(['queue:read', 'queue:list', 'queue:item'])]
-    public ?\DateTimeImmutable $availableAt;
+    public ?\DateTimeImmutable $availableAt = null;
 
     #[Groups(['queue:read', 'queue:list', 'queue:item'])]
-    public ?\DateTimeImmutable $deliveredAt;
+    public ?\DateTimeImmutable $deliveredAt = null;
 
     #[Groups(['queue:read', 'queue:list', 'queue:item'])]
-    public ?\DateTimeImmutable $processedAt;
+    public ?\DateTimeImmutable $processedAt = null;
 
     #[Groups(['queue:read', 'queue:list', 'queue:item'])]
-    public int $priority;
+    public ?int $priority = null;
 
     #[Groups(['queue:read', 'queue:list', 'queue:item'])]
-    public int $retryCount;
+    public ?int $retryCount = null;
 
     #[Groups(['queue:read', 'queue:list', 'queue:item'])]
-    public int $maxRetries;
+    public ?int $maxRetries = null;
 
     #[Groups(['queue:read', 'queue:list', 'queue:item'])]
-    public ?string $notificationProvider;
+    public ?string $notificationProvider = null;
 
     #[Groups(['queue:read', 'queue:list', 'queue:item'])]
-    public ?string $campaignId;
+    public ?string $campaignId = null;
 
     #[Groups(['queue:read', 'queue:list', 'queue:item'])]
-    public ?string $templateId;
+    public ?string $templateId = null;
 
     #[Groups(['queue:read', 'queue:list', 'queue:item'])]
-    public string $status;
+    public ?string $status = null;
 
     #[Groups(['queue:read', 'queue:item'])]
-    public ?string $errorMessage;
+    public ?string $errorMessage = null;
 
     #[Groups(['queue:read', 'queue:item'])]
-    public ?array $processingMetadata;
+    public ?array $processingMetadata = null;
 
     // Computed properties for stats
     #[Groups(['queue:stats'])]
-    public int $totalMessages;
+    public int $totalMessages = 0;
 
     #[Groups(['queue:stats'])]
-    public int $queuedMessages;
+    public int $queuedMessages = 0;
 
     #[Groups(['queue:stats'])]
-    public int $deliveredMessages;
+    public int $deliveredMessages = 0;
 
     #[Groups(['queue:stats'])]
-    public int $processedMessages;
+    public int $processedMessages = 0;
 
     #[Groups(['queue:stats'])]
-    public int $failedMessages;
+    public int $failedMessages = 0;
 
     #[Groups(['queue:stats'])]
-    public int $retryingMessages;
+    public int $retryingMessages = 0;
 
     #[Groups(['queue:stats'])]
-    public array $messagesByTransport;
+    public array $messagesByTransport = [];
 
     #[Groups(['queue:stats'])]
-    public array $messagesByProvider;
+    public array $messagesByProvider = [];
 
     #[Groups(['queue:stats'])]
-    public float $averageProcessingTime;
+    public float $averageProcessingTime = 0.0;
 
     #[Groups(['queue:stats'])]
-    public float $successRate;
+    public float $successRate = 0.0;
 
     // Health check properties
     #[Groups(['queue:health'])]
-    public string $overallHealth;
+    public string $overallHealth = '';
 
     #[Groups(['queue:health'])]
-    public array $transportHealth;
+    public array $transportHealth = [];
 
     #[Groups(['queue:health'])]
-    public int $oldestQueuedMessageAge;
+    public int $oldestQueuedMessageAge = 0;
 
     #[Groups(['queue:health'])]
-    public int $stuckMessagesCount;
+    public int $stuckMessagesCount = 0;
 
     #[Groups(['queue:health'])]
-    public array $healthChecks;
+    public array $healthChecks = [];
+
+    public function __construct(?string $id = null)
+    {
+        // Always ensure we have an ID
+        $this->id = $id ?? self::generateId('message');
+    }
 
     public static function fromEntity(QueuedMessage $queuedMessage): self
     {
         $resource = new self();
-        $resource->id = $queuedMessage->getId()->toRfc4122();
+        // Always ensure we have an ID - use the entity ID or generate one
+        $resource->id = $queuedMessage->getId()?->toRfc4122() ?? self::generateId('message');
         $resource->transport = $queuedMessage->getTransport();
         $resource->queueName = $queuedMessage->getQueueName();
         $resource->body = $queuedMessage->getBody();
@@ -169,6 +177,8 @@ class QueueResource
     public static function createStatsResource(array $stats): self
     {
         $resource = new self();
+        // Generate a deterministic ID for stats based on current state
+        $resource->id = $stats['id'] ?? self::generateId('stats', $stats);
         $resource->totalMessages = $stats['total_messages'];
         $resource->queuedMessages = $stats['queued_messages'];
         $resource->deliveredMessages = $stats['delivered_messages'];
@@ -186,6 +196,8 @@ class QueueResource
     public static function createHealthResource(array $health): self
     {
         $resource = new self();
+        // Generate a deterministic ID for health based on current state
+        $resource->id = self::generateId('health', $health);
         $resource->overallHealth = $health['overall_health'];
         $resource->transportHealth = $health['transport_health'];
         $resource->oldestQueuedMessageAge = $health['oldest_queued_message_age'];
@@ -193,5 +205,88 @@ class QueueResource
         $resource->healthChecks = $health['health_checks'];
 
         return $resource;
+    }
+
+    /**
+     * Generate a consistent ID for queue resources
+     * 
+     * @param string $type The type of resource (message, stats, health)
+     * @param array|null $data Optional data to make ID deterministic
+     * @return string
+     */
+    private static function generateId(string $type, ?array $data = null): string
+    {
+        switch ($type) {
+            case 'stats':
+                // Create deterministic ID based on current timestamp (rounded to minute)
+                // This allows consistent IDs for stats within the same minute
+                $minute = floor(time() / 60);
+                return "stats-{$minute}";
+                
+            case 'health':
+                // Create deterministic ID based on current timestamp (rounded to 30 seconds)
+                // This allows consistent IDs for health checks within 30-second windows
+                $window = floor(time() / 30);
+                return "health-{$window}";
+                
+            case 'message':
+            default:
+                // For individual messages, generate a unique UUID-like ID
+                return 'queue-' . bin2hex(random_bytes(16));
+        }
+    }
+
+    /**
+     * Get a human-readable identifier for this queue resource
+     * Useful for logging, debugging, and user interfaces
+     */
+    public function getDisplayId(): string
+    {
+        if ($this->isStatsResource()) {
+            return "Stats for " . date('Y-m-d H:i', (int)substr($this->id, 6) * 60);
+        }
+        
+        if ($this->isHealthResource()) {
+            return "Health check at " . date('Y-m-d H:i:s', (int)substr($this->id, 7) * 30);
+        }
+        
+        // For message resources, show transport + queue info if available
+        $parts = [];
+        if ($this->transport) {
+            $parts[] = "Transport: {$this->transport}";
+        }
+        if ($this->queueName) {
+            $parts[] = "Queue: {$this->queueName}";
+        }
+        if ($this->notificationProvider) {
+            $parts[] = "Provider: {$this->notificationProvider}";
+        }
+        
+        return empty($parts) ? "Message {$this->id}" : implode(' | ', $parts);
+    }
+
+    /**
+     * Check if this is a stats resource
+     */
+    public function isStatsResource(): bool
+    {
+        return str_starts_with($this->id, 'stats-');
+    }
+
+    /**
+     * Check if this is a health resource
+     */
+    public function isHealthResource(): bool
+    {
+        return str_starts_with($this->id, 'health-');
+    }
+
+    /**
+     * Check if this is a message resource
+     */
+    public function isMessageResource(): bool
+    {
+        return str_starts_with($this->id, 'queue-') || 
+               (!$this->isStatsResource() && !$this->isHealthResource());
     }
 }
