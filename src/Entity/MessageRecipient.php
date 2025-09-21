@@ -40,6 +40,16 @@ class MessageRecipient
     #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
     private Message $message;
 
+    #[ORM\ManyToOne(targetEntity: Contact::class, inversedBy: 'messageRecipients')]
+    #[ORM\JoinColumn(nullable: true, onDelete: 'SET NULL')]
+    #[Groups(['message:read'])]
+    private ?Contact $contact = null;
+
+    #[ORM\ManyToOne(targetEntity: ContactChannel::class)]
+    #[ORM\JoinColumn(nullable: true, onDelete: 'SET NULL')]
+    #[Groups(['message:read'])]
+    private ?ContactChannel $contactChannel = null;
+
     #[ORM\Column(length: 20)]
     #[Groups(['message:read'])]
     private string $type = self::TYPE_TO;
@@ -245,5 +255,74 @@ class MessageRecipient
     public function getEvents(): Collection
     {
         return $this->events;
+    }
+
+    public function getContact(): ?Contact
+    {
+        return $this->contact;
+    }
+
+    public function setContact(?Contact $contact): self
+    {
+        $this->contact = $contact;
+        return $this;
+    }
+
+    public function getContactChannel(): ?ContactChannel
+    {
+        return $this->contactChannel;
+    }
+
+    public function setContactChannel(?ContactChannel $contactChannel): self
+    {
+        $this->contactChannel = $contactChannel;
+        return $this;
+    }
+
+    /**
+     * Get the effective contact name from contact or fallback to recipient name
+     */
+    public function getEffectiveName(): ?string
+    {
+        if ($this->contact) {
+            return $this->contact->getFullName();
+        }
+        return $this->name;
+    }
+
+    /**
+     * Get the effective contact identifier (email/phone) from channel or fallback to address
+     */
+    public function getEffectiveAddress(): string
+    {
+        if ($this->contactChannel) {
+            return $this->contactChannel->getDisplayIdentifier();
+        }
+        return $this->address;
+    }
+
+    /**
+     * Check if this recipient is linked to a verified contact channel
+     */
+    public function isVerifiedChannel(): bool
+    {
+        return $this->contactChannel && $this->contactChannel->isVerified();
+    }
+
+    /**
+     * Check if this recipient can receive messages based on contact preferences
+     */
+    public function canReceiveMessages(string $category = null, string $priority = null): bool
+    {
+        if (!$this->contactChannel || !$this->contactChannel->getPreference()) {
+            return true; // No preferences set, allow by default
+        }
+
+        return $this->contactChannel->getPreference()->canReceiveMessage(
+            $category,
+            $priority,
+            null, // sender - could be added as parameter
+            new \DateTimeImmutable()
+        );
     }
 }
