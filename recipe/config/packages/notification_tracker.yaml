@@ -1,0 +1,98 @@
+# Configuration for Notification Tracker Bundle
+notification_tracker:
+    enabled: true
+    
+    # Automatic messenger transport configuration
+    messenger:
+        enabled: true
+        auto_configure: true
+        
+        # Configure notification transports
+        transports:
+            # Main notification transport for all notifications
+            notification:
+                enabled: true
+                dsn: '%env(MESSENGER_TRANSPORT_NOTIFICATION_DSN)%'
+                transport_name: 'notification'
+                queue_name: 'default'
+                analytics_enabled: true
+                provider_aware_routing: true
+                batch_size: 10
+                max_retries: 3
+                retry_delays: ['1000', '5000', '30000']
+            
+            # Optional: Dedicated email transport for high-volume email
+            notification_email:
+                enabled: false  # Enable this if you want separate email queue
+                dsn: '%env(MESSENGER_TRANSPORT_NOTIFICATION_EMAIL_DSN)%'
+                transport_name: 'email'
+                queue_name: 'email'
+                analytics_enabled: true
+                provider_aware_routing: true
+                batch_size: 25
+                max_retries: 5
+                retry_delays: ['2000', '10000', '60000']
+        
+        # Auto-configure specific channels to use notification transport
+        auto_configure_channels:
+            email: false      # Set to true to route emails through notification transport
+            sms: false        # Set to true to route SMS through notification transport
+            push: false       # Set to true to route push notifications through notification transport
+            slack: false      # Set to true to route Slack messages through notification transport
+            telegram: false   # Set to true to route Telegram messages through notification transport
+    
+    # Tracking configuration
+    tracking:
+        enabled: true
+        track_opens: true
+        track_clicks: true
+        store_content: true
+        content_retention_days: 90
+        use_async: true
+    
+    # Storage configuration
+    storage:
+        attachment_directory: '%kernel.project_dir%/var/notification-tracker/attachments'
+        template_directory: '%kernel.project_dir%/var/notification-tracker/templates'
+        max_attachment_size: 10485760  # 10MB
+        allowed_mime_types:
+            - 'application/pdf'
+            - 'image/jpeg'
+            - 'image/png'
+            - 'image/gif'
+    
+    # Retry configuration
+    retry:
+        max_retries: 3
+        retry_delay: 3600     # 1 hour
+        retry_multiplier: 2.0
+        max_retry_delay: 86400 # 24 hours
+    
+    # Webhook configuration
+    webhooks:
+        enabled: true
+        async_processing: true
+        verify_signatures: true
+        ip_whitelist_enabled: false
+        providers: {}
+    
+    # Channel configuration
+    channels:
+        email:
+            enabled: true
+            track_opens: true
+            track_clicks: true
+        sms:
+            enabled: true
+        push:
+            enabled: true
+        slack:
+            enabled: true
+        telegram:
+            enabled: true
+    
+    # Analytics configuration
+    analytics:
+        enabled: true
+        real_time: true
+        cache_ttl: 300

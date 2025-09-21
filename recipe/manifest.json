@@ -1,0 +1,15 @@
+{
+    "bundles": {
+        "Nkamuo\\NotificationTrackerBundle\\NotificationTrackerBundle": ["all"]
+    },
+    "copy-from-recipe": {
+        "config/": "%CONFIG_DIR%/"
+    },
+    "env": {
+        "MESSENGER_TRANSPORT_NOTIFICATION_DSN": "notification-tracking://doctrine?transport_name=notification&analytics_enabled=true&provider_aware_routing=true",
+        "MESSENGER_TRANSPORT_NOTIFICATION_EMAIL_DSN": "notification-tracking://doctrine?transport_name=email&analytics_enabled=true&provider_aware_routing=true&batch_size=25&max_retries=5"
+    },
+    "gitignore": [
+        "/var/notification-tracker/"
+    ]
+}

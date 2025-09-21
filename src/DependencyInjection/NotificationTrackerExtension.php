@@ -103,6 +103,114 @@ class NotificationTrackerExtension extends Extension implements PrependExtension
                 ],
             ]);
         }
+        
+        // Auto-configure Messenger transports for notifications
+        $this->prependMessengerConfiguration($container);
+    }
+    
+    private function prependMessengerConfiguration(ContainerBuilder $container): void
+    {
+        if (!$container->hasExtension('framework')) {
+            return;
+        }
+        
+        // Get our bundle configuration to check if auto-configuration is enabled
+        $configs = $container->getExtensionConfig($this->getAlias());
+        $configuration = new Configuration();
+        $config = $this->processConfiguration($configuration, $configs);
+        
+        if (!$config['messenger']['enabled'] || !$config['messenger']['auto_configure']) {
+            return;
+        }
+        
+        // Prepare messenger transport configuration
+        $messengerConfig = [
+            'transports' => [],
+        ];
+        
+        // Configure main notification transport
+        if ($config['messenger']['transports']['notification']['enabled']) {
+            $transportConfig = $config['messenger']['transports']['notification'];
+            $dsn = $this->buildTransportDsn($transportConfig);
+            $messengerConfig['transports']['notification'] = $dsn;
+        }
+        
+        // Configure email-specific transport if enabled
+        if ($config['messenger']['transports']['notification_email']['enabled']) {
+            $transportConfig = $config['messenger']['transports']['notification_email'];
+            $dsn = $this->buildTransportDsn($transportConfig);
+            $messengerConfig['transports']['notification_email'] = $dsn;
+        }
+        
+        // Configure routing for auto-configured channels
+        $routing = [];
+        $autoConfigureChannels = $config['messenger']['auto_configure_channels'];
+        
+        if ($autoConfigureChannels['email']) {
+            $routing['Symfony\\Component\\Mailer\\Messenger\\SendEmailMessage'] = 
+                $config['messenger']['transports']['notification_email']['enabled'] ? 'notification_email' : 'notification';
+        }
+        
+        if ($autoConfigureChannels['sms'] || $autoConfigureChannels['push'] || 
+            $autoConfigureChannels['slack'] || $autoConfigureChannels['telegram']) {
+            // Route notification messages to our transport
+            $routing['Symfony\\Component\\Notifier\\Message\\MessageInterface'] = 'notification';
+        }
+        
+        if (!empty($routing)) {
+            $messengerConfig['routing'] = $routing;
+        }
+        
+        // Only prepend if we have transports to configure
+        if (!empty($messengerConfig['transports'])) {
+            $container->prependExtensionConfig('framework', [
+                'messenger' => $messengerConfig
+            ]);
+        }
+    }
+    
+    private function buildTransportDsn(array $config): string
+    {
+        $dsn = $config['dsn'];
+        
+        // Build query parameters
+        $params = [];
+        
+        if ($config['transport_name'] !== 'notification') {
+            $params['transport_name'] = $config['transport_name'];
+        }
+        
+        if ($config['queue_name'] !== 'default') {
+            $params['queue_name'] = $config['queue_name'];
+        }
+        
+        if (!$config['analytics_enabled']) {
+            $params['analytics_enabled'] = 'false';
+        }
+        
+        if ($config['provider_aware_routing']) {
+            $params['provider_aware_routing'] = 'true';
+        }
+        
+        if ($config['batch_size'] !== 10) {
+            $params['batch_size'] = (string)$config['batch_size'];
+        }
+        
+        if ($config['max_retries'] !== 3) {
+            $params['max_retries'] = (string)$config['max_retries'];
+        }
+        
+        if ($config['retry_delays'] !== ['1000', '5000', '30000']) {
+            $params['retry_delays'] = implode(',', $config['retry_delays']);
+        }
+        
+        // Add query parameters to DSN
+        if (!empty($params)) {
+            $separator = strpos($dsn, '?') !== false ? '&' : '?';
+            $dsn .= $separator . http_build_query($params);
+        }
+        
+        return $dsn;
     }
     
     private function setParameters(ContainerBuilder $container, array $config): void

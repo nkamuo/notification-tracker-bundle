@@ -1,0 +1,32 @@
+# Messenger Configuration with Notification Tracker Integration
+# This file shows the recommended messenger setup for notification tracking
+
+framework:
+    messenger:
+        # Define your transports
+        transports:
+            # Your existing transports
+            async: "%env(MESSENGER_TRANSPORT_ASYNC_DSN)%"
+            failed: "%env(MESSENGER_TRANSPORT_FAILED_DSN)%"
+            sync: "sync://"
+            
+            # Notification Tracker transports (auto-configured by the bundle)
+            # The bundle will automatically add these if auto_configure is enabled:
+            # notification: "%env(MESSENGER_TRANSPORT_NOTIFICATION_DSN)%"
+            # notification_email: "%env(MESSENGER_TRANSPORT_NOTIFICATION_EMAIL_DSN)%"
+        
+        # Routing configuration
+        routing:
+            # Your existing routing
+            'App\Message\AsyncMessage': async
+            
+            # Optional: Manual routing for notification messages
+            # (Only needed if auto_configure_channels is disabled)
+            # 'Symfony\Component\Mailer\Messenger\SendEmailMessage': notification_email
+            # 'Symfony\Component\Notifier\Message\MessageInterface': notification
+            
+        # Failure transport for debugging
+        failure_transport: failed
+        
+        # Default bus configuration
+        default_bus: messenger.bus.default
