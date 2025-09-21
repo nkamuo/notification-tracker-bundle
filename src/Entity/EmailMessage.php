@@ -118,9 +118,9 @@ class EmailMessage extends Message
         return $this->headers;
     }
 
-    public function setHeaders(array $headers): self
+    public function setHeaders(?array $headers): self
     {
-        $this->headers = $headers;
+        $this->headers = $headers ?? [];
         return $this;
     }
 
