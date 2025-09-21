@@ -30,6 +30,8 @@ use Symfony\Component\Validator\Constraints as Assert;
 #[ORM\Index(name: 'idx_nt_message_status', columns: ['status'])]
 #[ORM\Index(name: 'idx_nt_message_sent_at', columns: ['sent_at'])]
 #[ORM\Index(name: 'idx_nt_message_notification', columns: ['notification_id'])]
+#[ORM\Index(name: 'idx_nt_message_stamp_id', columns: ['messenger_stamp_id'])]
+#[ORM\Index(name: 'idx_nt_message_fingerprint', columns: ['content_fingerprint'])]
 #[ORM\InheritanceType('JOINED')]
 #[ORM\DiscriminatorColumn(name: 'type', type: 'string')]
 #[ORM\DiscriminatorMap([
@@ -132,12 +134,10 @@ abstract class Message
 
     #[ORM\Column(length: 36, nullable: true)]
     #[Groups(['message:read', 'message:detail'])]
-    #[ORM\Index(name: 'idx_nt_message_stamp_id')]
     protected ?string $messengerStampId = null;
 
     #[ORM\Column(length: 64, nullable: true)]
     #[Groups(['message:read', 'message:detail'])]
-    #[ORM\Index(name: 'idx_nt_message_fingerprint')]
     protected ?string $contentFingerprint = null;
 
     #[ORM\Column(type: Types::DATETIME_IMMUTABLE)]
