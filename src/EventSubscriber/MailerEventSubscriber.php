@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Nkamuo\NotificationTrackerBundle\EventSubscriber;
 
 use Nkamuo\NotificationTrackerBundle\Entity\EmailMessage;
-use Nkamuo\NotificationTrackerBundle\Entity\MessageEvent;
+use Nkamuo\NotificationTrackerBundle\Entity\MessageEvent as TrackedMessageEvent;
 use Nkamuo\NotificationTrackerBundle\Entity\MessageContent;
 use Nkamuo\NotificationTrackerBundle\Service\MessageTracker;
 use Nkamuo\NotificationTrackerBundle\Messenger\Stamp\NotificationTrackingStamp;
@@ -14,6 +14,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\Mailer\Event\FailedMessageEvent;
+use Symfony\Component\Mailer\Event\MessageEvent;
 use Symfony\Component\Mailer\Event\SentMessageEvent;
 use Symfony\Component\Messenger\Envelope;
 use Symfony\Component\Messenger\Event\SendMessageToTransportsEvent;
@@ -68,7 +69,7 @@ class MailerEventSubscriber implements EventSubscriberInterface
                 // Add retry event
                 $this->messageTracker->addEvent(
                     $trackedMessage,
-                    MessageEvent::TYPE_QUEUED,
+                    TrackedMessageEvent::TYPE_QUEUED,
                     [
                         'retry_attempt' => true,
                         'transport' => $this->extractTransportName($event),
@@ -83,16 +84,34 @@ class MailerEventSubscriber implements EventSubscriberInterface
                 return;
             }
 
-            // Generate content fingerprint for analytics purposes
-            $contentFingerprint = $this->generateContentFingerprint($message);
-
             // Check for stamp ID in headers (set by middleware)
             $stampId = null;
             if ($message->getHeaders()->has('X-Stamp-ID')) {
                 $stampId = $message->getHeaders()->get('X-Stamp-ID')->getBodyAsString();
+                
+                // Check if we already tracked this via the stamp
+                $existingMessage = $this->messageRepository->findByStampId($stampId);
+                if ($existingMessage) {
+                    $this->logger->debug('Message already tracked via stamp ID', [
+                        'stamp_id' => $stampId,
+                        'tracking_id' => (string) $existingMessage->getId()
+                    ]);
+                    
+                    // Map for later reference
+                    $messageId = spl_object_id($message);
+                    $this->messageMap[$messageId] = $existingMessage;
+                    
+                    // Store tracking ID in message headers for later reference
+                    $message->getHeaders()->addTextHeader('X-Tracking-ID', (string) $existingMessage->getId());
+                    
+                    return;
+                }
             }
 
-            // Create new tracking entity for first attempt
+            // Generate content fingerprint for analytics purposes
+            $contentFingerprint = $this->generateContentFingerprint($message);
+
+            // Create new tracking entity for first attempt (fallback for direct mailer usage)
             $trackedMessage = $this->messageTracker->trackEmail(
                 $message,
                 $this->extractTransportName($event),
@@ -102,6 +121,7 @@ class MailerEventSubscriber implements EventSubscriberInterface
                     'symfony_event' => 'MessageEvent',
                     'content_fingerprint' => $contentFingerprint,
                     'stamp_id' => $stampId,
+                    'source' => 'fallback_tracking', // This indicates it wasn't tracked early
                 ]
             );
 
@@ -112,7 +132,7 @@ class MailerEventSubscriber implements EventSubscriberInterface
             $messageId = spl_object_id($message);
             $this->messageMap[$messageId] = $trackedMessage;
 
-            $this->logger->info('Email tracked via Symfony MessageEvent', [
+            $this->logger->info('Email tracked via Symfony MessageEvent (fallback)', [
                 'tracking_id' => (string) $trackedMessage->getId(),
                 'subject' => $message->getSubject(),
             ]);
@@ -148,7 +168,7 @@ class MailerEventSubscriber implements EventSubscriberInterface
                 // This is a retry - add a retry event
                 $this->messageTracker->addEvent(
                     $existingMessage,
-                    \Nkamuo\NotificationTrackerBundle\Entity\MessageEvent::TYPE_QUEUED,
+                    TrackedMessageEvent::TYPE_QUEUED,
                     [
                         'retry_attempt' => true,
                         'stamp_id' => $stamp->getId(),
@@ -163,11 +183,20 @@ class MailerEventSubscriber implements EventSubscriberInterface
                     'message_type' => get_class($envelope->getMessage()),
                 ]);
             } else {
-                // This is a new message - we'll track it when the actual email event fires
-                $this->logger->debug('New message with stamp detected', [
-                    'stamp_id' => $stamp->getId(),
-                    'message_type' => get_class($envelope->getMessage()),
-                ]);
+                // This is a new message - track it immediately for early visibility
+                $message = $envelope->getMessage();
+                if ($message instanceof \Symfony\Component\Mailer\Messenger\SendEmailMessage) {
+                    $email = $message->getMessage();
+                    if ($email instanceof Email) {
+                        $trackedMessage = $this->trackEmailEarly($email, $stamp, array_keys($event->getSenders()));
+                        
+                        $this->logger->info('Message tracked early via SendMessageToTransports', [
+                            'stamp_id' => $stamp->getId(),
+                            'tracking_id' => (string) $trackedMessage->getId(),
+                            'subject' => $email->getSubject(),
+                        ]);
+                    }
+                }
             }
             
         } catch (\Exception $e) {
@@ -194,17 +223,27 @@ class MailerEventSubscriber implements EventSubscriberInterface
             $trackedMessage = $this->getTrackedMessage($message);
             
             if (!$trackedMessage) {
-                // Auto-track untracked messages (e.g., from mailer:test command)
-                $this->logger->info('Auto-tracking untracked message in SentMessageEvent', [
-                    'subject' => $message->getSubject(),
-                ]);
+                // Check for stamp ID to see if we can find existing tracking
+                $stampId = null;
+                if ($message->getHeaders()->has('X-Stamp-ID')) {
+                    $stampId = $message->getHeaders()->get('X-Stamp-ID')->getBodyAsString();
+                    $trackedMessage = $this->messageRepository->findByStampId($stampId);
+                }
                 
-                $trackedMessage = $this->autoTrackMessage($message);
+                // Auto-track untracked messages only if no existing tracking found
                 if (!$trackedMessage) {
-                    $this->logger->warning('Failed to auto-track message for SentMessageEvent', [
+                    $this->logger->info('Auto-tracking untracked message in SentMessageEvent', [
                         'subject' => $message->getSubject(),
+                        'stamp_id' => $stampId,
                     ]);
-                    return;
+                    
+                    $trackedMessage = $this->autoTrackMessage($message);
+                    if (!$trackedMessage) {
+                        $this->logger->warning('Failed to auto-track message for SentMessageEvent', [
+                            'subject' => $message->getSubject(),
+                        ]);
+                        return;
+                    }
                 }
             }
 
@@ -217,7 +256,7 @@ class MailerEventSubscriber implements EventSubscriberInterface
 
             $this->messageTracker->addEvent(
                 $trackedMessage,
-                MessageEvent::TYPE_SENT,
+                TrackedMessageEvent::TYPE_SENT,
                 [
                     'provider_message_id' => $providerMessageId,
                     'debug' => $sentMessage->getDebug(),
@@ -257,18 +296,38 @@ class MailerEventSubscriber implements EventSubscriberInterface
             $trackedMessage = $this->getTrackedMessage($message);
             
             if (!$trackedMessage) {
-                $trackedMessage = $this->messageTracker->trackEmail(
-                    $message,
-                    null,
-                    null,
-                    ['symfony_event' => 'FailedMessageEvent']
-                );
+                // Check for stamp ID to see if we can find existing tracking
+                $stampId = null;
+                if ($message->getHeaders()->has('X-Stamp-ID')) {
+                    $stampId = $message->getHeaders()->get('X-Stamp-ID')->getBodyAsString();
+                    $trackedMessage = $this->messageRepository->findByStampId($stampId);
+                }
+                
+                // If still no tracked message, auto-track as last resort
+                if (!$trackedMessage) {
+                    $trackedMessage = $this->messageTracker->trackEmail(
+                        $message,
+                        null,
+                        null,
+                        [
+                            'symfony_event' => 'FailedMessageEvent',
+                            'stamp_id' => $stampId,
+                            'source' => 'failed_message_fallback'
+                        ]
+                    );
+                    
+                    $this->logger->warning('Auto-tracked message in FailedMessageEvent (no prior tracking found)', [
+                        'tracking_id' => (string) $trackedMessage->getId(),
+                        'subject' => $message->getSubject(),
+                        'stamp_id' => $stampId,
+                    ]);
+                }
             }
 
             $error = $event->getError();
             $this->messageTracker->addEvent(
                 $trackedMessage,
-                MessageEvent::TYPE_FAILED,
+                TrackedMessageEvent::TYPE_FAILED,
                 [
                     'error_message' => $error?->getMessage(),
                     'error_class' => $error ? get_class($error) : null,
@@ -395,5 +454,38 @@ class MailerEventSubscriber implements EventSubscriberInterface
         ];
         
         return hash('sha256', serialize($content));
+    }
+
+    /**
+     * Track an email early when it hits the SendMessageToTransports event
+     * This provides immediate visibility even before transport attempts
+     */
+    private function trackEmailEarly(Email $email, NotificationTrackingStamp $stamp, array $transports): EmailMessage
+    {
+        // Generate content fingerprint for analytics purposes
+        $contentFingerprint = $this->generateContentFingerprint($email);
+
+        // Track the email with stamp ID
+        $trackedMessage = $this->messageTracker->trackEmail(
+            $email,
+            implode(',', $transports), // transport names as comma-separated string
+            null, // notification will be auto-created
+            [
+                'stamp_id' => $stamp->getId(),
+                'content_fingerprint' => $contentFingerprint,
+                'transports' => $transports,
+                'symfony_event' => 'SendMessageToTransportsEvent',
+                'tracked_early' => true,
+            ]
+        );
+
+        // Store tracking ID in message headers for later reference
+        $email->getHeaders()->addTextHeader('X-Tracking-ID', (string) $trackedMessage->getId());
+
+        // Map for later reference
+        $messageId = spl_object_id($email);
+        $this->messageMap[$messageId] = $trackedMessage;
+
+        return $trackedMessage;
     }
 }
