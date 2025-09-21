@@ -6,7 +6,7 @@ namespace Nkamuo\NotificationTrackerBundle\State\Analytics;
 
 use ApiPlatform\Metadata\Operation;
 use ApiPlatform\State\ProviderInterface;
-use Nkamuo\NotificationTrackerBundle\Dto\Analytics\FailureAnalyticsDto;
+use Nkamuo\NotificationTrackerBundle\DTO\Analytics\FailureAnalyticsDto;
 use Nkamuo\NotificationTrackerBundle\Service\Analytics\AnalyticsService;
 use Symfony\Component\HttpFoundation\RequestStack;
 

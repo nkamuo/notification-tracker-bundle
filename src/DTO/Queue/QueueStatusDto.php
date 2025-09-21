@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Nkamuo\NotificationTrackerBundle\Dto\Queue;
+namespace Nkamuo\NotificationTrackerBundle\DTO\Queue;
 
 use ApiPlatform\Metadata\ApiResource;
 use ApiPlatform\Metadata\Get;

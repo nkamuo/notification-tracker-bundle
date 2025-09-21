@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Nkamuo\NotificationTrackerBundle\Dto\Analytics;
+namespace Nkamuo\NotificationTrackerBundle\DTO\Analytics;
 
 use ApiPlatform\Metadata\ApiResource;
 use ApiPlatform\Metadata\GetCollection;

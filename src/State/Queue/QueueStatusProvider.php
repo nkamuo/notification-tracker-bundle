@@ -6,7 +6,7 @@ namespace Nkamuo\NotificationTrackerBundle\State\Queue;
 
 use ApiPlatform\Metadata\Operation;
 use ApiPlatform\State\ProviderInterface;
-use Nkamuo\NotificationTrackerBundle\Dto\Queue\QueueStatusDto;
+use Nkamuo\NotificationTrackerBundle\DTO\Queue\QueueStatusDto;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 
