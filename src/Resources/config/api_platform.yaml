@@ -5,6 +5,12 @@ services:
     Nkamuo\NotificationTrackerBundle\Controller\Api\CancelMessageController:
         tags: ['controller.service_arguments']
 
+    Nkamuo\NotificationTrackerBundle\Controller\Api\SendNotificationController:
+        tags: ['controller.service_arguments']
+
+    Nkamuo\NotificationTrackerBundle\Controller\Api\ScheduleNotificationController:
+        tags: ['controller.service_arguments']
+
     # Note: State processors and providers removed as they don't exist yet
     # Uncomment when implemented:
     # Nkamuo\NotificationTrackerBundle\State\MessageStateProcessor:

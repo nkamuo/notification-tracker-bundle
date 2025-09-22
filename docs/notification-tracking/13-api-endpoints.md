@@ -1,18 +1,83 @@
 # API Endpoints Documentation
 
-This document describes the new API Platform endpoints for sending notifications through various channels.
+This document describes the unified API Platform endpoints for managing and sending notifications through various channels.
 
 ## Overview
 
-The notification tracker bundle now provides several API endpoints for sending notifications:
+The notification tracker bundle provides a unified notification system with these main endpoints:
 
+- `/api/notifications` - Unified notification management (CRUD) with status-based workflow
+- `/api/notifications/{id}/send` - Send a notification immediately
+- `/api/notifications/{id}/schedule` - Schedule a notification for later delivery
 - `/api/send/email` - Send individual emails
 - `/api/send/sms` - Send individual SMS messages  
 - `/api/send/slack` - Send individual Slack messages
-- `/api/send/notification` - Send multi-channel notifications
-- `/api/notification_drafts` - Manage notification drafts (CRUD)
-- `/api/notification_drafts/{id}/send` - Send a draft immediately
-- `/api/notification_drafts/{id}/schedule` - Schedule a draft for later
+
+## Unified Notification Management
+
+### Create Notification - `POST /api/notifications`
+
+Create a new notification that supports draft → scheduled → sent workflow:
+
+```json
+{
+  "type": "marketing",
+  "importance": "normal",
+  "status": "draft",
+  "direction": "outbound",
+  "subject": "Weekly Newsletter",
+  "channels": ["email", "slack"],
+  "recipients": [
+    {"channel": "email", "address": "team@example.com", "name": "Team"},
+    {"channel": "slack", "address": "#announcements"}
+  ],
+  "content": "Here are this week's highlights...",
+  "channelSettings": {
+    "email": {
+      "html": "<h1>This Week's Updates</h1><p>Here are this week's highlights...</p>"
+    }
+  },
+  "metadata": {
+    "campaign": "weekly_newsletter",
+    "source": "api"
+  }
+}
+```
+
+### Send Notification - `POST /api/notifications/{id}/send`
+
+Send a draft notification immediately:
+
+```json
+{
+  "sendImmediately": true
+}
+```
+
+### Schedule Notification - `PUT /api/notifications/{id}/schedule`
+
+Schedule a notification for future delivery:
+
+```json
+{
+  "scheduledAt": "2024-12-07T15:00:00Z"
+}
+```
+
+### Get Notifications - `GET /api/notifications`
+
+Filter notifications by status, direction, or other criteria:
+
+```bash
+# Get all draft notifications
+GET /api/notifications?status=draft&direction=draft
+
+# Get sent notifications from last week
+GET /api/notifications?status=sent&createdAt[after]=2024-12-01
+
+# Get notifications by type
+GET /api/notifications?type=marketing
+```
 
 ## Individual Channel Endpoints
 
@@ -27,7 +92,6 @@ Send an email with full tracking support.
   "text": "Hello from the notification system!",
   "html": "<h1>Hello from the notification system!</h1>",
   "labels": ["marketing", "newsletter"],
-  "save_as_draft": false,
   "scheduled_at": "2024-12-07T15:00:00Z"
 }
 ```
@@ -55,7 +119,6 @@ Send an SMS message with tracking.
   "to": ["+1234567890", "+0987654321"],
   "message": "Your verification code is 123456",
   "labels": ["verification", "security"],
-  "save_as_draft": false,
   "scheduled_at": "2024-12-07T15:00:00Z"
 }
 ```
@@ -79,7 +142,6 @@ Send a Slack message with rich formatting support.
   ],
   "thread_ts": "1234567890.123456",
   "labels": ["deployment", "ops"],
-  "save_as_draft": false,
   "scheduled_at": "2024-12-07T15:00:00Z"
 }
 ```
@@ -119,45 +181,61 @@ Send notifications across multiple channels simultaneously.
       ]
     }
   ],
-  "save_as_draft": false,
   "scheduled_at": "2024-12-07T15:00:00Z"
 }
 ```
 
-## Draft Management Endpoints
+## Notification Workflow Examples
 
-### Create Draft - `POST /api/notification_drafts`
+### Draft → Edit → Send Workflow
 
-```json
+**Step 1: Create Draft**
+```bash
+POST /api/notifications
 {
-  "title": "Weekly Newsletter",
-  "channels": ["email", "slack"],
-  "emailRecipients": ["team@example.com"],
-  "slackChannels": ["#announcements"],
-  "content": {
-    "subject": "This Week's Updates",
-    "text": "Here are this week's highlights...",
-    "html": "<h1>This Week's Updates</h1><p>Here are this week's highlights...</p>"
-  },
-  "labels": [{"name": "newsletter"}],
-  "scheduledAt": "2024-12-07T09:00:00Z"
+  "type": "newsletter",
+  "status": "draft",
+  "direction": "outbound",
+  "subject": "Weekly Updates",
+  "channels": ["email"],
+  "recipients": [{"channel": "email", "address": "team@example.com"}],
+  "content": "Draft content..."
 }
 ```
 
-### Send Draft - `POST /api/notification_drafts/{id}/send`
+**Step 2: Edit Draft** 
+```bash
+PUT /api/notifications/{id}
+{
+  "subject": "Weekly Updates - Updated",
+  "content": "Final content..."
+}
+```
 
-```json
+**Step 3: Send Immediately**
+```bash
+POST /api/notifications/{id}/send
 {
   "sendImmediately": true
+```
+
+### Draft → Schedule → Auto-Send Workflow
+
+**Step 1: Create and Schedule**
+```bash
+POST /api/notifications
+{
+  "type": "marketing",
+  "status": "draft",
+  "subject": "Black Friday Sale",
+  "scheduledAt": "2024-11-29T09:00:00Z",
+  "channels": ["email"],
+  "recipients": [{"channel": "email", "address": "customers@example.com"}]
 }
 ```
 
-### Schedule Draft - `PUT /api/notification_drafts/{id}/schedule`
-
-```json
-{
-  "scheduledAt": "2024-12-07T15:00:00Z"
-}
+**Step 2: System automatically sends at scheduled time**
+Status transitions: `draft` → `scheduled` → `queued` → `sending` → `sent`
 ```
 
 ## Response Format
@@ -211,11 +289,30 @@ All endpoints return consistent response formats:
 
 ## Features
 
-### Drafts and Scheduling
+### Status-Based Workflow
 
-All endpoints support:
-- `save_as_draft: true` - Save without sending
-- `scheduled_at: "ISO8601"` - Schedule for future delivery
+The unified notification system supports a comprehensive workflow:
+- **draft** - Created but not sent
+- **scheduled** - Queued for future delivery  
+- **queued** - Ready for processing
+- **sending** - Currently being delivered
+- **sent** - Successfully delivered
+- **failed** - Delivery failed
+
+### Direction Types
+
+- **outbound** - Notifications sent to external recipients
+- **inbound** - Received notifications/webhooks
+- **draft** - Draft notifications being composed
+
+### Scheduling
+
+Schedule notifications for future delivery:
+```json
+{
+  "scheduledAt": "2024-12-07T15:00:00Z"
+}
+```
 
 ### Labeling System
 
@@ -236,7 +333,7 @@ Every sent message receives:
 
 ### API Platform Integration
 
-- Full CRUD operations on drafts
+- Full CRUD operations on notifications
 - Pagination and filtering support  
 - Standardized error responses
 - OpenAPI documentation generation
@@ -246,49 +343,79 @@ Every sent message receives:
 
 ### Emergency Alert System
 
+Send urgent notifications across multiple channels:
+
 ```bash
-curl -X POST /api/send/notification \
+curl -X POST /api/notifications \
   -H "Content-Type: application/json" \
   -d '{
-    "content": {
-      "subject": "URGENT: System Outage",
-      "message": "Payment processing is currently down. ETA for resolution: 15 minutes."
-    },
-    "labels": ["urgent", "outage", "payments"],
-    "channels": [
-      {
-        "type": "email",
-        "to": ["oncall@company.com", "management@company.com"]
-      },
-      {
-        "type": "sms",
-        "to": ["+1234567890", "+0987654321"]  
-      },
-      {
-        "type": "slack",
-        "channel": "#incidents",
-        "blocks": [...]
-      }
-    ]
+    "type": "alert",
+    "importance": "urgent", 
+    "status": "draft",
+    "direction": "outbound",
+    "subject": "URGENT: System Outage",
+    "content": "Payment processing is currently down. ETA for resolution: 15 minutes.",
+    "channels": ["email", "sms", "slack"],
+    "recipients": [
+      {"channel": "email", "address": "oncall@company.com"},
+      {"channel": "email", "address": "management@company.com"},
+      {"channel": "sms", "address": "+1234567890"},
+      {"channel": "slack", "address": "#incidents"}
+    ],
+    "metadata": {
+      "severity": "high",
+      "incident_id": "INC-2024-001"
+    }
   }'
+
+# Then send immediately
+curl -X POST /api/notifications/{id}/send \
+  -H "Content-Type: application/json" \
+  -d '{"sendImmediately": true}'
 ```
 
 ### Scheduled Marketing Campaign
 
+Create and schedule a marketing notification:
+
 ```bash
-curl -X POST /api/notification_drafts \
+curl -X POST /api/notifications \
   -H "Content-Type: application/json" \
   -d '{
-    "title": "Black Friday Sale",
+    "type": "marketing",
+    "importance": "normal",
+    "status": "draft", 
+    "direction": "outbound",
+    "subject": "🔥 50% Off Everything - Black Friday Sale!",
+    "content": "Limited time offer - dont miss out!",
     "channels": ["email"],
-    "emailRecipients": ["customers@company.com"],
-    "content": {
-      "subject": "🔥 50% Off Everything - Black Friday Sale!",
-      "html": "<h1>Limited Time Offer...</h1>"
+    "recipients": [
+      {"channel": "email", "address": "customers@company.com"}
+    ],
+    "channelSettings": {
+      "email": {
+        "html": "<h1>Black Friday Sale</h1><p>Limited Time Offer...</p>"
+      }
     },
-    "labels": [{"name": "marketing"}, {"name": "black-friday"}],
-    "scheduledAt": "2024-11-29T09:00:00Z"
+    "scheduledAt": "2024-11-29T09:00:00Z",
+    "metadata": {
+      "campaign": "black-friday-2024",
+      "source": "marketing-api"
+    }
   }'
 ```
 
-This system provides a complete notification platform with API-first design, comprehensive tracking, and multi-channel delivery capabilities.
+### Query and Filter Notifications
+
+```bash
+# Get all draft notifications
+curl -X GET "/api/notifications?status=draft"
+
+# Get marketing notifications from last month  
+curl -X GET "/api/notifications?type=marketing&createdAt[after]=2024-11-01"
+
+# Get failed notifications
+curl -X GET "/api/notifications?status=failed"
+```
+
+This unified system provides a complete notification platform with API-first design, comprehensive tracking, and multi-channel delivery capabilities.
