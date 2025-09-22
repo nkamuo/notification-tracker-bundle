@@ -176,8 +176,48 @@ class MailerEventSubscriber implements EventSubscriberInterface
         $stamp = $envelope->last(NotificationTrackingStamp::class);
         
         if (!$stamp) {
-            // No stamp found, this shouldn't happen if middleware is working
-            $this->logger->warning('No NotificationTrackingStamp found in envelope');
+            // No stamp found - middleware didn't run, so we'll auto-track here for immediate visibility
+            $this->logger->warning('No NotificationTrackingStamp found in envelope - auto-tracking message');
+            
+            $message = $envelope->getMessage();
+            if ($message instanceof \Symfony\Component\Mailer\Messenger\SendEmailMessage) {
+                $email = $message->getMessage();
+                if ($email instanceof Email) {
+                    try {
+                        // Create a tracking stamp for this message
+                        $trackingId = (string) new Ulid();
+                        $stamp = new NotificationTrackingStamp($trackingId);
+                        
+                        // Track the email immediately for early visibility
+                        $trackedMessage = $this->trackEmailEarly($email, $stamp, array_keys($event->getSenders()));
+                        
+                        // Add a queued event since this message is going to transport
+                        $this->messageTracker->addEvent(
+                            $trackedMessage,
+                            TrackedMessageEvent::TYPE_QUEUED,
+                            [
+                                'stamp_id' => $stamp->getId(),
+                                'symfony_event' => 'SendMessageToTransportsEvent',
+                                'transports' => array_keys($event->getSenders()),
+                                'auto_tracked' => true,
+                                'reason' => 'missing_middleware_stamp'
+                            ]
+                        );
+                        
+                        $this->logger->info('Message auto-tracked in SendMessageToTransports (middleware fallback)', [
+                            'tracking_id' => (string) $trackedMessage->getId(),
+                            'stamp_id' => $stamp->getId(),
+                            'subject' => $email->getSubject(),
+                        ]);
+                        
+                    } catch (\Exception $e) {
+                        $this->logger->error('Failed to auto-track message in SendMessageToTransports', [
+                            'error' => $e->getMessage(),
+                            'subject' => $email->getSubject(),
+                        ]);
+                    }
+                }
+            }
             return;
         }
 
