@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Nkamuo\NotificationTrackerBundle\Messenger\Stamp;
+namespace Nkamuo\NotificationTrackerBundle\Stamp;
 
 use Symfony\Component\Messenger\Stamp\StampInterface;
 

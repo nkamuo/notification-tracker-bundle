@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Nkamuo\NotificationTrackerBundle\Messenger\Middleware;
 
-use Nkamuo\NotificationTrackerBundle\Messenger\Stamp\NotificationTrackingStamp;
+use Nkamuo\NotificationTrackerBundle\Stamp\NotificationTrackingStamp;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\Mailer\Messenger\SendEmailMessage;
 use Symfony\Component\Messenger\Envelope;
 use Symfony\Component\Messenger\Middleware\MiddlewareInterface;
@@ -29,9 +30,18 @@ use Symfony\Component\Uid\Ulid;
  */
 class NotificationTrackingMiddleware implements MiddlewareInterface
 {
+    public function __construct(
+        private readonly LoggerInterface $logger
+    ) {
+    }
     public function handle(Envelope $envelope, StackInterface $stack): Envelope
     {
         $message = $envelope->getMessage();
+        
+        $this->logger->debug('NotificationTrackingMiddleware: Processing message', [
+            'message_type' => get_class($message),
+            'is_trackable' => $this->isTrackableMessage($message)
+        ]);
         
         // Only process notification-related messages
         if (!$this->isTrackableMessage($message)) {
@@ -44,6 +54,15 @@ class NotificationTrackingMiddleware implements MiddlewareInterface
             $trackingId = (string) new Ulid();
             $stamp = new NotificationTrackingStamp($trackingId);
             $envelope = $envelope->with($stamp);
+            
+            $this->logger->info('NotificationTrackingMiddleware: Added tracking stamp', [
+                'tracking_id' => $trackingId,
+                'message_type' => get_class($message)
+            ]);
+        } else {
+            $this->logger->debug('NotificationTrackingMiddleware: Stamp already exists', [
+                'tracking_id' => $stamp->getId()
+            ]);
         }
 
         // Add tracking headers/metadata based on message type

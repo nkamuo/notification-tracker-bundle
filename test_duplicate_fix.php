@@ -3,7 +3,7 @@
 require_once 'vendor/autoload.php';
 
 use Nkamuo\NotificationTrackerBundle\EventSubscriber\MailerEventSubscriber;
-use Nkamuo\NotificationTrackerBundle\Messenger\Stamp\NotificationTrackingStamp;
+use Nkamuo\NotificationTrackerBundle\Stamp\NotificationTrackingStamp;
 use Nkamuo\NotificationTrackerBundle\Repository\MessageRepository;
 use Nkamuo\NotificationTrackerBundle\Service\MessageTracker;
 use Symfony\Component\Mailer\Event\FailedMessageEvent;

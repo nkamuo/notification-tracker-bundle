@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Nkamuo\NotificationTrackerBundle\Tests\Messenger\Stamp;
 
-use Nkamuo\NotificationTrackerBundle\Messenger\Stamp\NotificationTrackingStamp;
+use Nkamuo\NotificationTrackerBundle\Stamp\NotificationTrackingStamp;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Messenger\Stamp\StampInterface;
 

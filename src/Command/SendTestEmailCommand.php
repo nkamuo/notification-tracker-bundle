@@ -17,6 +17,7 @@ use Symfony\Component\Mime\Email;
 use Nkamuo\NotificationTrackerBundle\Stamp\NotificationProviderStamp;
 use Nkamuo\NotificationTrackerBundle\Stamp\NotificationCampaignStamp;
 use Nkamuo\NotificationTrackerBundle\Stamp\NotificationTemplateStamp;
+use Nkamuo\NotificationTrackerBundle\Stamp\NotificationTrackingStamp;
 
 #[AsCommand(
     name: 'notification-tracker:send-email',

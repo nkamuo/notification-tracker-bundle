@@ -8,7 +8,7 @@ use Nkamuo\NotificationTrackerBundle\Entity\EmailMessage;
 use Nkamuo\NotificationTrackerBundle\Entity\MessageEvent as TrackedMessageEvent;
 use Nkamuo\NotificationTrackerBundle\Entity\MessageContent;
 use Nkamuo\NotificationTrackerBundle\Service\MessageTracker;
-use Nkamuo\NotificationTrackerBundle\Messenger\Stamp\NotificationTrackingStamp;
+use Nkamuo\NotificationTrackerBundle\Stamp\NotificationTrackingStamp;
 use Nkamuo\NotificationTrackerBundle\Repository\MessageRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Nkamuo\NotificationTrackerBundle\Tests\Integration;
 
 use Nkamuo\NotificationTrackerBundle\Messenger\Middleware\NotificationTrackingMiddleware;
-use Nkamuo\NotificationTrackerBundle\Messenger\Stamp\NotificationTrackingStamp;
+use Nkamuo\NotificationTrackerBundle\Stamp\NotificationTrackingStamp;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Mailer\Messenger\SendEmailMessage;
 use Symfony\Component\Messenger\Envelope;
