@@ -10,6 +10,9 @@ use ApiPlatform\Metadata\Get;
 use ApiPlatform\Metadata\GetCollection;
 use ApiPlatform\Metadata\Post;
 use ApiPlatform\Metadata\Put;
+use ApiPlatform\OpenApi\Model\Operation;
+use ApiPlatform\OpenApi\Model\RequestBody;
+use ApiPlatform\OpenApi\Model\Response;
 use ApiPlatform\Doctrine\Orm\Filter\SearchFilter;
 use ApiPlatform\Doctrine\Orm\Filter\DateFilter;
 use ApiPlatform\Doctrine\Orm\Filter\OrderFilter;
@@ -60,10 +63,10 @@ use Symfony\Component\Uid\Ulid;
             requirements: ['id' => '[0-9A-HJKMNP-TV-Z]{26}'],
             controller: 'Nkamuo\NotificationTrackerBundle\Controller\Api\SendNotificationController',
             normalizationContext: ['groups' => ['notification:read']],
-            openapiContext: [
-                'summary' => 'Send a notification immediately',
-                'description' => 'Sends a notification to all configured recipients and channels',
-            ]
+            openapi: new Operation(
+                summary: 'Send a notification immediately',
+                description: 'Sends a notification to all configured recipients and channels'
+            )
         ),
         new Put(
             uriTemplate: ApiRoutes::NOTIFICATIONS . '/{id}/schedule',
@@ -71,10 +74,10 @@ use Symfony\Component\Uid\Ulid;
             controller: 'Nkamuo\NotificationTrackerBundle\Controller\Api\ScheduleNotificationController',
             normalizationContext: ['groups' => ['notification:read']],
             denormalizationContext: ['groups' => ['notification:schedule']],
-            openapiContext: [
-                'summary' => 'Schedule a notification',
-                'description' => 'Schedule a notification to be sent at a specified time',
-            ]
+            openapi: new Operation(
+                summary: 'Schedule a notification',
+                description: 'Schedule a notification to be sent at a specified time'
+            )
         ),
     ]
 )]
