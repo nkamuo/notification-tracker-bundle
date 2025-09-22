@@ -13,11 +13,11 @@ services:
     #     tags:
     #         - { name: 'notification_tracker.webhook_provider', provider: 'twilio' }
 
-    # Nkamuo\NotificationTrackerBundle\Webhook\Provider\MailgunWebhookProvider:
-    #     arguments:
-    #         $signingKey: '%env(MAILGUN_SIGNING_KEY)%'
-    #     tags:
-    #         - { name: 'notification_tracker.webhook_provider', provider: 'mailgun' }
+    Nkamuo\NotificationTrackerBundle\Webhook\Provider\MailgunWebhookProvider:
+        arguments:
+            $secret: ''
+        tags:
+            - { name: 'notification_tracker.webhook_provider', provider: 'mailgun' }
 
     # Nkamuo\NotificationTrackerBundle\Webhook\Provider\MailchimpWebhookProvider:
     #     arguments:

@@ -47,18 +47,7 @@ services:
             $asyncProcessing: true
             $verifySignatures: true
 
-    # Webhook Providers (with optional secrets)
-    Nkamuo\NotificationTrackerBundle\Webhook\Provider\SendGridWebhookProvider:
-        arguments:
-            $secret: ''
-        tags:
-            - { name: notification_tracker.webhook_provider }
-
-    Nkamuo\NotificationTrackerBundle\Webhook\Provider\MailgunWebhookProvider:
-        arguments:
-            $secret: ''
-        tags:
-            - { name: notification_tracker.webhook_provider }
+    # Webhook providers moved to webhooks.yaml to avoid duplicates
 
     # Remove repository services - they're auto-configured by Doctrine
     # Just ensure they're tagged properly in the Entity annotations

@@ -1,28 +1,5 @@
 services:
-    # Core Tracking Services (only include existing classes)
-    Nkamuo\NotificationTrackerBundle\Service\MessageTracker:
-        arguments:
-            $entityManager: '@doctrine.orm.entity_manager'
-            $eventDispatcher: '@event_dispatcher'
-            $messageRepository: '@Nkamuo\NotificationTrackerBundle\Repository\MessageRepository'
-            $attachmentManager: '@Nkamuo\NotificationTrackerBundle\Service\AttachmentManager'
-            $storeContent: '%notification_tracker.tracking.store_content%'
-        tags:
-            - { name: 'notification_tracker.message_tracker' }
-            - { name: monolog.logger, channel: notification_tracker }
-
-    Nkamuo\NotificationTrackerBundle\Service\NotificationTracker:
-        arguments:
-            $entityManager: '@doctrine.orm.entity_manager'
-        tags:
-            - { name: 'notification_tracker.notification_tracker' }
-            - { name: monolog.logger, channel: notification_tracker }
-
-    Nkamuo\NotificationTrackerBundle\Service\AttachmentManager:
-        arguments:
-            $attachmentDirectory: '%notification_tracker.storage.attachment_directory%'
-            $maxSize: '%notification_tracker.storage.max_attachment_size%'
-            $allowedMimeTypes: '%notification_tracker.storage.allowed_mime_types%'
+    # Core Tracking Services - Main definitions moved to services.yaml to avoid duplicates
 
     Nkamuo\NotificationTrackerBundle\Service\MessageRetryService:
         arguments:
@@ -32,15 +9,7 @@ services:
         tags:
             - { name: monolog.logger, channel: notification_tracker }
 
-    Nkamuo\NotificationTrackerBundle\Service\WebhookProcessor:
-        arguments:
-            $entityManager: '@doctrine.orm.entity_manager'
-            $messageTracker: '@Nkamuo\NotificationTrackerBundle\Service\MessageTracker'
-            $messageBus: '@messenger.bus.default'
-            $asyncProcessing: '%notification_tracker.webhooks.async_processing%'
-            $verifySignatures: '%notification_tracker.webhooks.verify_signatures%'
-        tags:
-            - { name: monolog.logger, channel: notification_tracker_webhook }
+    # WebhookProcessor moved to services.yaml to avoid duplicates
 
     Nkamuo\NotificationTrackerBundle\State\NotificationCreateProcessor:
         arguments:
