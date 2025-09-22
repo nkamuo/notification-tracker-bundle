@@ -7,6 +7,66 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.2] - 2025-09-22
+
+### Fixed
+- **Critical Fix**: Added complete NotificationSender service implementation that was missing in v0.10.0/v0.10.1
+- **Messenger Integration**: Restored Symfony Messenger-based notification sending with DelayStamp scheduling
+- **Service Methods**: Added `sendNotification()` and `sendNotificationToChannels()` methods
+- **Scheduling**: Included proper scheduling delay calculation in milliseconds
+- **Error Resolution**: Fixed 'Class not found' errors for NotificationSender service
+- **Functionality**: Restored all Messenger-based notification sending capabilities
+
+### Technical
+- Complete NotificationSender implementation with Messenger DelayStamp integration
+- Proper error handling and logging for notification dispatch
+- Millisecond-precision scheduling delay calculations
+
+## [0.10.1] - 2025-09-22
+
+### Fixed
+- **Webhook Providers**: Fixed SendGridWebhookProvider constructor parameter name from `$defaultSecret` to `$secret`
+- **Webhook Providers**: Fixed MailgunWebhookProvider constructor parameter name from `$defaultSecret` to `$secret`
+- **Property References**: Updated property references in verifySignature methods
+- **Service Container**: Resolved dependency injection errors on upgrade from v0.9.8
+
+### Compatibility
+- Fixed service container error: 'Invalid service "SendGridWebhookProvider": method "__construct()" has no argument named "$secret"'
+- Improved compatibility when upgrading from v0.9.8 to v0.10.x
+
+## [0.10.0] - 2025-09-22
+
+### Added
+- **🚀 Symfony Messenger Integration**: Complete DelayStamp-based scheduling system
+- **Individual Message Scheduling**: Millisecond precision scheduling with DelayStamp
+- **Enhanced Status Tracking**: New convenience methods for notification status management
+- **Unified API**: Streamlined notification sending through MessageBus integration
+- **Messenger Classes**: SendNotificationMessage and SendChannelMessage for async processing
+- **Message Handlers**: SendNotificationMessageHandler and SendChannelMessageHandler
+- **Enhanced Entities**: Added scheduling override capabilities to Message entity
+- **Status Methods**: Added `isFailed()`, `isCancelled()` convenience methods to Notification entity
+
+### Changed
+- **Breaking**: Replaced custom scheduling logic with Symfony Messenger DelayStamp
+- **Breaking**: Removed deprecated draft-based controllers and commands
+- **Breaking**: Replaced NotificationDraft entity with enhanced Notification scheduling
+- **Breaking**: Updated API endpoints to use unified notification scheduling
+- **Enhanced**: NotificationSender service now uses MessageBus instead of direct channel calls
+- **Improved**: Support for both notification-level and message-level scheduling
+
+### Removed
+- **Breaking**: Removed SendScheduledDraftsCommand (replaced with SendScheduledNotificationsCommand)
+- **Breaking**: Removed ScheduleDraftController and SendDraftController
+- **Breaking**: Removed NotificationDraft entity
+- **Breaking**: Removed deprecated Resource classes (SendEmailResource, SendNotificationResource, etc.)
+
+### Technical
+- Complete messenger-based architecture for scalable notification processing
+- DelayStamp integration for native Symfony scheduling capabilities
+- Enhanced Message entity with hasScheduleOverride(), getEffectiveScheduledAt(), isReadyToSend()
+- Comprehensive unit test suite covering all new functionality
+- Updated documentation with messenger configuration examples
+
 ## [0.1.15] - 2025-09-19
 
 ### Added
