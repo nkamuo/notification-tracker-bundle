@@ -17,6 +17,9 @@ use Symfony\Component\Uid\Ulid;
 
 class WebhookProcessor
 {
+    private readonly bool $asyncProcessing;
+    private readonly bool $verifySignatures;
+
     public function __construct(
         private readonly EntityManagerInterface $entityManager,
         private readonly MessageTracker $messageTracker,
@@ -24,9 +27,11 @@ class WebhookProcessor
         private readonly WebhookProviderRegistry $providerRegistry,
         private readonly LoggerInterface $logger,
         private readonly MessageBusInterface $messageBus,
-        private readonly bool $asyncProcessing = true,
-        private readonly bool $verifySignatures = true
+        bool $asyncProcessing = true,
+        bool $verifySignatures = true
     ) {
+        $this->asyncProcessing = $asyncProcessing;
+        $this->verifySignatures = $verifySignatures;
     }
 
     public function processWebhook(

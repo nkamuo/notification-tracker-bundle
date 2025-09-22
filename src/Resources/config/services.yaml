@@ -41,7 +41,7 @@ services:
     Nkamuo\NotificationTrackerBundle\Service\WebhookProviderRegistry:
         arguments: []
 
-    # WebhookProcessor with explicit scalar parameter binding
+    # WebhookProcessor with explicit configuration
     Nkamuo\NotificationTrackerBundle\Service\WebhookProcessor:
         arguments:
             $asyncProcessing: true
