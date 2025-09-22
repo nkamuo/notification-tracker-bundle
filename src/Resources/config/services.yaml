@@ -41,13 +41,11 @@ services:
     Nkamuo\NotificationTrackerBundle\Service\WebhookProviderRegistry:
         arguments: []
 
-    # WebhookProcessor with explicit configuration
+    # WebhookProcessor with explicit configuration (no logger tag to avoid circular deps)
     Nkamuo\NotificationTrackerBundle\Service\WebhookProcessor:
         arguments:
             $asyncProcessing: true
             $verifySignatures: true
-        tags:
-            - { name: monolog.logger, channel: notification_tracker_webhook }
 
     # Webhook Providers (with optional secrets)
     Nkamuo\NotificationTrackerBundle\Webhook\Provider\SendGridWebhookProvider:
