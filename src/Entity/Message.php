@@ -175,11 +175,11 @@ abstract class Message
     protected ?MessageTemplate $template = null;
 
     #[ORM\OneToOne(targetEntity: MessageContent::class, mappedBy: 'message', cascade: ['persist', 'remove'], orphanRemoval: true)]
-    #[Groups(['message:detail'])]
+    #[Groups(['message:detail', 'message:read'])]
     protected ?MessageContent $content = null;
 
     #[ORM\OneToMany(targetEntity: MessageRecipient::class, mappedBy: 'message', cascade: ['persist', 'remove'], orphanRemoval: true)]
-    #[Groups(['message:detail'])]
+    #[Groups(['message:detail', 'message:read'])]
     protected Collection $recipients;
 
     #[ORM\OneToMany(targetEntity: MessageEvent::class, mappedBy: 'message', cascade: ['persist', 'remove'], orphanRemoval: true)]
@@ -528,15 +528,23 @@ abstract class Message
     #[Groups(['message:list', 'message:detail'])]
     public function getLatestEvent(): ?array
     {
-        $latestEvent = $this->events->first();
-        if (!$latestEvent) {
+        // Get events ordered by occurredAt DESC (newest first)
+        $events = $this->events->toArray();
+        if (empty($events)) {
             return null;
         }
+
+        // Sort by occurredAt to ensure we get the truly latest event
+        usort($events, function($a, $b) {
+            return $b->getOccurredAt() <=> $a->getOccurredAt();
+        });
+
+        $latestEvent = $events[0];
 
         return [
             'type' => $latestEvent->getEventType(),
             'occurred_at' => $latestEvent->getOccurredAt(),
-            'metadata' => $latestEvent->getMetadata(),
+            'metadata' => $latestEvent->getEventData(),
         ];
     }
 

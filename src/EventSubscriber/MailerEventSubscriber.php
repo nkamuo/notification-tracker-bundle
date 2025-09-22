@@ -213,6 +213,7 @@ class MailerEventSubscriber implements EventSubscriberInterface
                     } catch (\Exception $e) {
                         $this->logger->error('Failed to auto-track message in SendMessageToTransports', [
                             'error' => $e->getMessage(),
+                            'trace' => $e->getTraceAsString(),
                             'subject' => $email->getSubject(),
                         ]);
                     }
