@@ -5,11 +5,15 @@ declare(strict_types=1);
 namespace Nkamuo\NotificationTrackerBundle\Entity;
 
 use ApiPlatform\Metadata\ApiResource;
+use ApiPlatform\Metadata\ApiFilter;
 use ApiPlatform\Metadata\Get;
 use ApiPlatform\Metadata\GetCollection;
 use ApiPlatform\Metadata\Post;
 use ApiPlatform\Metadata\Put;
 use ApiPlatform\Metadata\Delete;
+use ApiPlatform\Doctrine\Orm\Filter\SearchFilter;
+use ApiPlatform\Doctrine\Orm\Filter\RangeFilter;
+use ApiPlatform\Doctrine\Orm\Filter\OrderFilter;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
@@ -23,6 +27,8 @@ use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 #[ORM\Table(name: 'nt_label')]
 #[ORM\Index(name: 'idx_nt_label_name', columns: ['name'])]
 #[ORM\Index(name: 'idx_nt_label_color', columns: ['color'])]
+#[ORM\Index(name: 'idx_nt_label_notification_count', columns: ['notification_count'])]
+#[ORM\HasLifecycleCallbacks]
 #[UniqueEntity(fields: ['name'], message: 'A label with this name already exists.')]
 #[ApiResource(
     operations: [
@@ -39,8 +45,16 @@ use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
         new Delete(),
     ],
     normalizationContext: ['groups' => ['label:read']],
-    denormalizationContext: ['groups' => ['label:write']]
+    denormalizationContext: ['groups' => ['label:write']],
+    routePrefix: '/notification-tracker',
 )]
+#[ApiFilter(SearchFilter::class, properties: [
+    'name' => 'partial',
+    'color' => 'exact',
+    'description' => 'partial'
+])]
+#[ApiFilter(RangeFilter::class, properties: ['notificationCount'])]
+#[ApiFilter(OrderFilter::class, properties: ['name', 'createdAt', 'notificationCount'])]
 class Label
 {
     #[ORM\Id]
@@ -71,6 +85,10 @@ class Label
     #[ORM\Column(type: Types::DATETIME_IMMUTABLE, nullable: true)]
     #[Groups(['label:read'])]
     private ?\DateTimeImmutable $updatedAt = null;
+
+    #[ORM\Column(type: Types::INTEGER, options: ['default' => 0])]
+    #[Groups(['label:read', 'label:list'])]
+    private int $notificationCount = 0;
 
     #[ORM\ManyToMany(targetEntity: Message::class, mappedBy: 'labels')]
     private Collection $messages;
@@ -140,6 +158,29 @@ class Label
         return $this;
     }
 
+    public function getNotificationCount(): int
+    {
+        return $this->notificationCount;
+    }
+
+    public function setNotificationCount(int $notificationCount): self
+    {
+        $this->notificationCount = $notificationCount;
+        return $this;
+    }
+
+    public function incrementNotificationCount(): self
+    {
+        $this->notificationCount++;
+        return $this;
+    }
+
+    public function decrementNotificationCount(): self
+    {
+        $this->notificationCount = max(0, $this->notificationCount - 1);
+        return $this;
+    }
+
     /**
      * @return Collection<int, Message>
      */
@@ -176,6 +217,7 @@ class Label
     {
         if (!$this->notifications->contains($notification)) {
             $this->notifications->add($notification);
+            $this->incrementNotificationCount();
         }
 
         return $this;
@@ -183,7 +225,9 @@ class Label
 
     public function removeNotification(Notification $notification): self
     {
-        $this->notifications->removeElement($notification);
+        if ($this->notifications->removeElement($notification)) {
+            $this->decrementNotificationCount();
+        }
 
         return $this;
     }
@@ -192,6 +236,17 @@ class Label
     public function preUpdate(): void
     {
         $this->updatedAt = new \DateTimeImmutable();
+    }
+
+    #[ORM\PostLoad]
+    public function postLoad(): void
+    {
+        // Sync the notification count with actual collection size
+        // This helps maintain consistency if count gets out of sync
+        $actualCount = $this->notifications->count();
+        if ($this->notificationCount !== $actualCount) {
+            $this->notificationCount = $actualCount;
+        }
     }
 
     public function __toString(): string
