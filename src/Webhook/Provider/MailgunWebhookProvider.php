@@ -9,7 +9,7 @@ use Nkamuo\NotificationTrackerBundle\Entity\MessageEvent;
 class MailgunWebhookProvider implements WebhookProviderInterface
 {
     public function __construct(
-        private readonly string $defaultSecret = ''
+        private readonly string $secret = ''
     ) {
     }
 
@@ -25,7 +25,7 @@ class MailgunWebhookProvider implements WebhookProviderInterface
 
     public function verifySignature(array $payload, array $headers, ?string $secret = null): bool
     {
-        $webhookSecret = $secret ?? $this->defaultSecret;
+        $webhookSecret = $secret ?? $this->secret;
         
         if (empty($webhookSecret) || !isset($headers['X-Mailgun-Signature'])) {
             return false;
