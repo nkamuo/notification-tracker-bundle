@@ -170,9 +170,9 @@ class Notification
     #[Groups(['notification:create', 'notification:detail'])]
     private ?array $channelSettings = null;
 
-    #[ORM\Column(type: Types::JSON)]
+    #[ORM\Column(type: Types::JSON, nullable: true)]
     #[Groups(['notification:read', 'notification:write', 'notification:detail', 'notification:create'])]
-    private array $metadata = [];
+    private ?array $metadata = [];
 
     #[ORM\Column(type: Types::DATETIME_IMMUTABLE)]
     #[Groups(['notification:read', 'notification:list'])]
@@ -532,24 +532,27 @@ class Notification
 
     public function getMetadata(): array
     {
-        return $this->metadata;
+        return $this->metadata ?? [];
     }
 
-    public function setMetadata(array $metadata): self
+    public function setMetadata(?array $metadata): self
     {
-        $this->metadata = $metadata;
+        $this->metadata = $metadata ?? [];
         return $this;
     }
 
     public function addMetadata(string $key, $value): self
     {
+        if ($this->metadata === null) {
+            $this->metadata = [];
+        }
         $this->metadata[$key] = $value;
         return $this;
     }
 
     public function getMetadataValue(string $key, $default = null)
     {
-        return $this->metadata[$key] ?? $default;
+        return ($this->metadata ?? [])[$key] ?? $default;
     }
 
     // Convenience methods for checking status
