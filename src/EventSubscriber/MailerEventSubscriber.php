@@ -111,6 +111,27 @@ class MailerEventSubscriber implements EventSubscriberInterface
             // Generate content fingerprint for analytics purposes
             $contentFingerprint = $this->generateContentFingerprint($message);
 
+            // Check for existing message with same content fingerprint (fallback deduplication)
+            if ($contentFingerprint) {
+                $since = new \DateTime('-5 minutes'); // Check for duplicates within 5 minutes
+                $existingMessage = $this->messageRepository->findRecentByContentFingerprint($contentFingerprint, $since);
+                if ($existingMessage) {
+                    $this->logger->debug('Message already tracked via content fingerprint', [
+                        'content_fingerprint' => $contentFingerprint,
+                        'tracking_id' => (string) $existingMessage->getId()
+                    ]);
+                    
+                    // Map for later reference
+                    $messageId = spl_object_id($message);
+                    $this->messageMap[$messageId] = $existingMessage;
+                    
+                    // Store tracking ID in message headers for later reference
+                    $message->getHeaders()->addTextHeader('X-Tracking-ID', (string) $existingMessage->getId());
+                    
+                    return;
+                }
+            }
+
             // Create new tracking entity for first attempt (fallback for direct mailer usage)
             $trackedMessage = $this->messageTracker->trackEmail(
                 $message,
