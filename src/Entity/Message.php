@@ -210,6 +210,11 @@ abstract class Message
     #[Groups(['message:read', 'message:write', 'message:list'])]
     protected Collection $labels;
 
+    #[ORM\ManyToOne(targetEntity: NotificationDraft::class, inversedBy: 'messages')]
+    #[ORM\JoinColumn(nullable: true, onDelete: 'SET NULL')]
+    #[Groups(['message:read', 'message:detail'])]
+    protected ?NotificationDraft $draft = null;
+
     public function __construct()
     {
         $this->id = new Ulid();
@@ -575,9 +580,14 @@ abstract class Message
             return null;
         }
 
-        // Sort by occurredAt to ensure we get the truly latest event
+        // Sort by occurredAt DESC, then by ID DESC for deterministic ordering
         usort($events, function($a, $b) {
-            return $b->getOccurredAt() <=> $a->getOccurredAt();
+            $timeComparison = $b->getOccurredAt() <=> $a->getOccurredAt();
+            if ($timeComparison === 0) {
+                // If times are equal, use ID as tiebreaker (newer ID = later event)
+                return $b->getId() <=> $a->getId();
+            }
+            return $timeComparison;
         });
 
         $latestEvent = $events[0];
@@ -648,6 +658,17 @@ abstract class Message
         }
 
         return false;
+    }
+
+    public function getDraft(): ?NotificationDraft
+    {
+        return $this->draft;
+    }
+
+    public function setDraft(?NotificationDraft $draft): self
+    {
+        $this->draft = $draft;
+        return $this;
     }
 
     abstract public function getType(): string;
