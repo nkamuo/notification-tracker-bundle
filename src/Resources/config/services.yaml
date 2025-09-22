@@ -14,8 +14,22 @@ services:
 
     # Core Services with proper logger configuration
     Nkamuo\NotificationTrackerBundle\Service\MessageTracker:
+        arguments:
+            $storeContent: true
         tags:
             - { name: monolog.logger, channel: notification_tracker }
+
+    # NotificationTracker service for handling notifications
+    Nkamuo\NotificationTrackerBundle\Service\NotificationTracker:
+        tags:
+            - { name: monolog.logger, channel: notification_tracker }
+
+    # AttachmentManager with required parameters
+    Nkamuo\NotificationTrackerBundle\Service\AttachmentManager:
+        arguments:
+            $attachmentDirectory: '%kernel.project_dir%/var/attachments'
+            $maxSize: 10485760  # 10MB
+            $allowedMimeTypes: ['image/jpeg', 'image/png', 'application/pdf', 'text/plain']
 
     # Messenger Middleware for notification tracking stamps
     Nkamuo\NotificationTrackerBundle\Messenger\Middleware\NotificationTrackingMiddleware:
