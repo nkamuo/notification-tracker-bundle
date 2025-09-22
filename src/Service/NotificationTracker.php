@@ -18,7 +18,8 @@ class NotificationTracker
 {
     public function __construct(
         private readonly EntityManagerInterface $entityManager,
-        private readonly LoggerInterface $logger
+        private readonly LoggerInterface $logger,
+        private readonly EventEnrichmentService $enrichmentService
     ) {
     }
 
@@ -37,6 +38,15 @@ class NotificationTracker
         //     $channels[] = $channel;
         // }
         $notification->setChannels($channels);
+        
+        // Dispatch creation event for enrichment
+        $context = ['source' => 'symfony_notification'];
+        $shouldContinue = $this->enrichmentService->enrichNotificationOnCreation($notification, $context);
+        
+        if (!$shouldContinue) {
+            $this->logger->info('Notification creation was stopped by event listener');
+            return $notification;
+        }
         
         $this->entityManager->persist($notification);
         $this->entityManager->flush();
@@ -83,6 +93,35 @@ class NotificationTracker
             $recipient->setStatus(MessageRecipient::STATUS_DELIVERED);
             $message->addRecipient($recipient);
         }
+
+        // Dispatch creation event for enrichment
+        $context = [
+            'source' => 'inbound_webhook',
+            'provider' => $type,
+            'from' => $from,
+            'to' => $to,
+            'subject' => $subject,
+            'content' => $content
+        ];
+        
+        $shouldContinue = $this->enrichmentService->enrichMessageOnCreation($message, $context);
+        
+        if (!$shouldContinue) {
+            $this->logger->info('Message creation was stopped by event listener');
+            return $message;
+        }
+
+        // Dispatch inbound message event for custom processing
+        $rawData = [
+            'type' => $type,
+            'from' => $from,
+            'to' => $to,
+            'subject' => $subject,
+            'content' => $content,
+            'metadata' => $metadata
+        ];
+        
+        $this->enrichmentService->processInboundMessage($message, $rawData, $type, $context);
 
         return $message;
     }

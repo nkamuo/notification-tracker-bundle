@@ -26,7 +26,8 @@ use ApiPlatform\Metadata\Delete;
         new Delete()
     ],
     normalizationContext: ['groups' => ['contact_channel_preference:read']],
-    denormalizationContext: ['groups' => ['contact_channel_preference:write']]
+    denormalizationContext: ['groups' => ['contact_channel_preference:write']],
+    routePrefix: '/notification-tracker',
 )]
 class ContactChannelPreference
 {

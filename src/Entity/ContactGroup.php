@@ -31,7 +31,8 @@ use ApiPlatform\Metadata\Delete;
         new Delete()
     ],
     normalizationContext: ['groups' => ['contact_group:read']],
-    denormalizationContext: ['groups' => ['contact_group:write']]
+    denormalizationContext: ['groups' => ['contact_group:write']],
+    routePrefix: '/notification-tracker',
 )]
 class ContactGroup
 {

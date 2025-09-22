@@ -51,3 +51,17 @@ services:
 
     # Remove repository services - they're auto-configured by Doctrine
     # Just ensure they're tagged properly in the Entity annotations
+
+    # Event Enrichment Service
+    Nkamuo\NotificationTrackerBundle\Service\EventEnrichmentService:
+        tags:
+            # - { name: monolog.logger, channel: notification_tracker }
+
+    # Event Subscribers for auto-labeling and validation
+    Nkamuo\NotificationTrackerBundle\EventSubscriber\AutoLabelEventSubscriber:
+        tags:
+            - { name: kernel.event_subscriber }
+
+    Nkamuo\NotificationTrackerBundle\EventSubscriber\ValidationEventSubscriber:
+        tags:
+            - { name: kernel.event_subscriber }

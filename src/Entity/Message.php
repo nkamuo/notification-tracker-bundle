@@ -84,7 +84,8 @@ use Symfony\Component\Validator\Constraints as Assert;
     'transportName' => 'partial',
     'subject' => 'partial',
     'notification.type' => 'exact',
-    'notification.subject' => 'partial'
+    'notification.subject' => 'partial',
+    'labels.name' => 'exact'
 ])]
 #[ApiFilter(DateFilter::class, properties: ['createdAt', 'sentAt'])]
 #[ApiFilter(OrderFilter::class, properties: ['createdAt', 'sentAt', 'status'], arguments: ['orderParameterName' => 'order'])]

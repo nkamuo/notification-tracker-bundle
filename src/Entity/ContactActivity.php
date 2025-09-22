@@ -23,7 +23,8 @@ use ApiPlatform\Metadata\Post;
         new Post()
     ],
     normalizationContext: ['groups' => ['contact_activity:read']],
-    denormalizationContext: ['groups' => ['contact_activity:write']]
+    denormalizationContext: ['groups' => ['contact_activity:write']],
+    routePrefix: '/notification-tracker',
 )]
 class ContactActivity
 {

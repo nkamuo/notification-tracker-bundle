@@ -81,9 +81,9 @@ use Symfony\Component\Uid\Ulid;
         ),
     ]
 )]
-#[ApiFilter(SearchFilter::class, properties: ['type' => 'exact', 'importance' => 'exact', 'subject' => 'partial'])]
-#[ApiFilter(DateFilter::class, properties: ['createdAt'])]
-#[ApiFilter(OrderFilter::class, properties: ['createdAt', 'type', 'importance', 'subject'])]
+#[ApiFilter(SearchFilter::class, properties: ['type' => 'exact', 'importance' => 'exact', 'subject' => 'partial', 'status' => 'exact', 'direction' => 'exact', 'labels.name' => 'exact'])]
+#[ApiFilter(DateFilter::class, properties: ['createdAt', 'scheduledAt', 'sentAt'])]
+#[ApiFilter(OrderFilter::class, properties: ['createdAt', 'type', 'importance', 'subject', 'status'])]
 class Notification
 {
     public const IMPORTANCE_LOW = 'low';
