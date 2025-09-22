@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.3] - 2025-09-22
+
+### Fixed
+- **Critical Service Fix**: Resolved WebhookProcessor dependency injection errors preventing upgrades from v0.10.1 to v0.10.2
+- **Service Configuration**: Fixed WebhookProviderRegistry service container configuration 
+- **Compiler Pass**: Enhanced WebhookProviderPass to use correct service class references instead of service IDs
+- **Constructor Arguments**: Fixed webhook provider constructor argument resolution
+- **Optional Secrets**: Made webhook provider secrets optional (empty by default) to prevent environment variable requirements
+
+### Changed
+- **Documentation Organization**: Moved all development files to `docs/development/` folder
+- **User Guides**: Organized user-facing documentation in `docs/guides/` folder  
+- **Root Cleanup**: Removed temporary test files and development artifacts from root directory
+- **Release Documentation**: Created comprehensive `RELEASE.md` with migration guide
+- **Changelog**: Enhanced with detailed release history and upgrade notes
+
+### Technical
+- WebhookProviderRegistry now properly configured with tagged service collection
+- WebhookProviderPass compiler pass improved for better service resolution
+- Service container configuration supports optional webhook secrets
+- Proper argument ordering for WebhookProcessor constructor
+- Documentation structure follows best practices with organized folders
+
 ## [0.10.2] - 2025-09-22
 
 ### Fixed
