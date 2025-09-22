@@ -9,6 +9,7 @@ use ApiPlatform\Metadata\ApiFilter;
 use ApiPlatform\Metadata\Get;
 use ApiPlatform\Metadata\GetCollection;
 use ApiPlatform\Metadata\Post;
+use ApiPlatform\Metadata\Put;
 use ApiPlatform\Doctrine\Orm\Filter\SearchFilter;
 use ApiPlatform\Doctrine\Orm\Filter\DateFilter;
 use ApiPlatform\Doctrine\Orm\Filter\OrderFilter;
@@ -48,6 +49,33 @@ use Symfony\Component\Uid\Ulid;
             normalizationContext: ['groups' => ['notification:detail']],
             processor: 'Nkamuo\NotificationTrackerBundle\State\NotificationCreateProcessor'
         ),
+        new Put(
+            uriTemplate: ApiRoutes::NOTIFICATIONS . '/{id}',
+            requirements: ['id' => '[0-9A-HJKMNP-TV-Z]{26}'],
+            denormalizationContext: ['groups' => ['notification:write']],
+            normalizationContext: ['groups' => ['notification:detail']]
+        ),
+        new Post(
+            uriTemplate: ApiRoutes::NOTIFICATIONS . '/{id}/send',
+            requirements: ['id' => '[0-9A-HJKMNP-TV-Z]{26}'],
+            controller: 'Nkamuo\NotificationTrackerBundle\Controller\Api\SendNotificationController',
+            normalizationContext: ['groups' => ['notification:read']],
+            openapiContext: [
+                'summary' => 'Send a notification immediately',
+                'description' => 'Sends a notification to all configured recipients and channels',
+            ]
+        ),
+        new Put(
+            uriTemplate: ApiRoutes::NOTIFICATIONS . '/{id}/schedule',
+            requirements: ['id' => '[0-9A-HJKMNP-TV-Z]{26}'],
+            controller: 'Nkamuo\NotificationTrackerBundle\Controller\Api\ScheduleNotificationController',
+            normalizationContext: ['groups' => ['notification:read']],
+            denormalizationContext: ['groups' => ['notification:schedule']],
+            openapiContext: [
+                'summary' => 'Schedule a notification',
+                'description' => 'Schedule a notification to be sent at a specified time',
+            ]
+        ),
     ]
 )]
 #[ApiFilter(SearchFilter::class, properties: ['type' => 'exact', 'importance' => 'exact', 'subject' => 'partial'])]
@@ -59,6 +87,36 @@ class Notification
     public const IMPORTANCE_NORMAL = 'normal';
     public const IMPORTANCE_HIGH = 'high';
     public const IMPORTANCE_URGENT = 'urgent';
+
+    // Status constants for workflow management
+    public const STATUS_DRAFT = 'draft';
+    public const STATUS_SCHEDULED = 'scheduled';
+    public const STATUS_QUEUED = 'queued';
+    public const STATUS_SENDING = 'sending';
+    public const STATUS_SENT = 'sent';
+    public const STATUS_FAILED = 'failed';
+    public const STATUS_CANCELLED = 'cancelled';
+
+    // Direction constants for message/notification flow type
+    public const DIRECTION_INBOUND = 'inbound';   // Received notifications/messages
+    public const DIRECTION_OUTBOUND = 'outbound'; // Sent notifications/messages  
+    public const DIRECTION_DRAFT = 'draft';       // Draft notifications (not yet sent)
+
+    public const ALLOWED_STATUSES = [
+        self::STATUS_DRAFT,
+        self::STATUS_SCHEDULED,
+        self::STATUS_QUEUED,
+        self::STATUS_SENDING,
+        self::STATUS_SENT,
+        self::STATUS_FAILED,
+        self::STATUS_CANCELLED,
+    ];
+
+    public const ALLOWED_DIRECTIONS = [
+        self::DIRECTION_INBOUND,
+        self::DIRECTION_OUTBOUND,
+        self::DIRECTION_DRAFT,
+    ];
 
     #[ORM\Id]
     #[ORM\Column(type: 'ulid', unique: true)]
@@ -72,6 +130,14 @@ class Notification
     #[ORM\Column(length: 20)]
     #[Groups(['notification:read', 'notification:list', 'notification:write', 'notification:create'])]
     private string $importance = self::IMPORTANCE_NORMAL;
+
+    #[ORM\Column(length: 20)]
+    #[Groups(['notification:read', 'notification:list', 'notification:write', 'notification:create'])]
+    private string $status = self::STATUS_DRAFT;
+
+    #[ORM\Column(length: 20)]
+    #[Groups(['notification:read', 'notification:list', 'notification:write', 'notification:create'])]
+    private string $direction = self::DIRECTION_DRAFT;
 
     #[ORM\Column(type: Types::JSON)]
     #[Groups(['notification:read', 'notification:write', 'notification:list', 'notification:detail', 'notification:create'])]
@@ -101,9 +167,21 @@ class Notification
     #[Groups(['notification:create', 'notification:detail'])]
     private ?array $channelSettings = null;
 
+    #[ORM\Column(type: Types::JSON)]
+    #[Groups(['notification:read', 'notification:write', 'notification:detail', 'notification:create'])]
+    private array $metadata = [];
+
     #[ORM\Column(type: Types::DATETIME_IMMUTABLE)]
     #[Groups(['notification:read', 'notification:list'])]
     private \DateTimeImmutable $createdAt;
+
+    #[ORM\Column(type: Types::DATETIME_IMMUTABLE, nullable: true)]
+    #[Groups(['notification:read', 'notification:write', 'notification:list', 'notification:create'])]
+    private ?\DateTimeImmutable $scheduledAt = null;
+
+    #[ORM\Column(type: Types::DATETIME_IMMUTABLE, nullable: true)]
+    #[Groups(['notification:read', 'notification:list'])]
+    private ?\DateTimeImmutable $sentAt = null;
 
     #[ORM\OneToMany(targetEntity: Message::class, mappedBy: 'notification', cascade: ['persist', 'remove'], orphanRemoval: true)]
     #[Groups(['notification:detail'])]
@@ -403,5 +481,134 @@ class Notification
         }
 
         return false;
+    }
+
+    public function getStatus(): string
+    {
+        return $this->status;
+    }
+
+    public function setStatus(string $status): self
+    {
+        $this->status = $status;
+        return $this;
+    }
+
+    public function getDirection(): string
+    {
+        return $this->direction;
+    }
+
+    public function setDirection(string $direction): self
+    {
+        $this->direction = $direction;
+        return $this;
+    }
+
+    public function getScheduledAt(): ?\DateTimeImmutable
+    {
+        return $this->scheduledAt;
+    }
+
+    public function setScheduledAt(?\DateTimeImmutable $scheduledAt): self
+    {
+        $this->scheduledAt = $scheduledAt;
+        return $this;
+    }
+
+    public function getSentAt(): ?\DateTimeImmutable
+    {
+        return $this->sentAt;
+    }
+
+    public function setSentAt(?\DateTimeImmutable $sentAt): self
+    {
+        $this->sentAt = $sentAt;
+        return $this;
+    }
+
+    public function getMetadata(): array
+    {
+        return $this->metadata;
+    }
+
+    public function setMetadata(array $metadata): self
+    {
+        $this->metadata = $metadata;
+        return $this;
+    }
+
+    public function addMetadata(string $key, $value): self
+    {
+        $this->metadata[$key] = $value;
+        return $this;
+    }
+
+    public function getMetadataValue(string $key, $default = null)
+    {
+        return $this->metadata[$key] ?? $default;
+    }
+
+    // Convenience methods for checking status
+    public function isDraft(): bool
+    {
+        return $this->status === self::STATUS_DRAFT;
+    }
+
+    public function isScheduled(): bool
+    {
+        return $this->status === self::STATUS_SCHEDULED;
+    }
+
+    public function isSent(): bool
+    {
+        return $this->status === self::STATUS_SENT;
+    }
+
+    public function isQueued(): bool
+    {
+        return $this->status === self::STATUS_QUEUED;
+    }
+
+    /**
+     * Check if notification failed
+     */
+    public function isFailed(): bool
+    {
+        return $this->status === self::STATUS_FAILED;
+    }
+
+    /**
+     * Check if notification is cancelled
+     */
+    public function isCancelled(): bool
+    {
+        return $this->status === self::STATUS_CANCELLED;
+    }
+
+    // Convenience methods for source tracking via metadata
+    public function getSource(): ?string
+    {
+        return $this->getMetadataValue('source');
+    }
+
+    public function setSource(string $source): self
+    {
+        return $this->addMetadata('source', $source);
+    }
+
+    public function isUserCreated(): bool
+    {
+        return $this->getSource() === 'user';
+    }
+
+    public function isSystemGenerated(): bool
+    {
+        return $this->getSource() === 'system';
+    }
+
+    public function isApiGenerated(): bool
+    {
+        return $this->getSource() === 'api';
     }
 }

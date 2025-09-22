@@ -100,13 +100,15 @@ abstract class Message
     public const STATUS_CANCELLED = 'cancelled';
     public const STATUS_RETRYING = 'retrying';
 
-    // Direction constants
+    // Direction constants - aligned with Notification directions
     public const DIRECTION_OUTBOUND = 'outbound';
     public const DIRECTION_INBOUND = 'inbound';
+    public const DIRECTION_DRAFT = 'draft';
 
     public const ALLOWED_DIRECTIONS = [
         self::DIRECTION_OUTBOUND,
         self::DIRECTION_INBOUND,
+        self::DIRECTION_DRAFT,
     ];
 
     #[ORM\Id]
@@ -170,6 +172,10 @@ abstract class Message
     #[Groups(['message:read', 'message:list', 'message:detail'])]
     protected ?\DateTimeImmutable $sentAt = null;
 
+    #[ORM\Column(type: Types::BOOLEAN)]
+    #[Groups(['message:read', 'message:write', 'message:list'])]
+    protected bool $hasScheduleOverride = false;
+
     #[ORM\Column(type: Types::INTEGER)]
     #[Groups(['message:read', 'message:list'])]
     protected int $retryCount = 0;
@@ -209,11 +215,6 @@ abstract class Message
     #[ORM\JoinTable(name: 'nt_message_labels')]
     #[Groups(['message:read', 'message:write', 'message:list'])]
     protected Collection $labels;
-
-    #[ORM\ManyToOne(targetEntity: NotificationDraft::class, inversedBy: 'messages')]
-    #[ORM\JoinColumn(nullable: true, onDelete: 'SET NULL')]
-    #[Groups(['message:read', 'message:detail'])]
-    protected ?NotificationDraft $draft = null;
 
     public function __construct()
     {
@@ -365,6 +366,61 @@ abstract class Message
     {
         $this->sentAt = $sentAt;
         return $this;
+    }
+
+    public function getHasScheduleOverride(): bool
+    {
+        return $this->hasScheduleOverride;
+    }
+
+    public function setHasScheduleOverride(bool $hasScheduleOverride): self
+    {
+        $this->hasScheduleOverride = $hasScheduleOverride;
+        return $this;
+    }
+
+    /**
+     * Set scheduled time with override flag
+     */
+    public function scheduleFor(\DateTimeImmutable $scheduledAt, bool $isOverride = false): self
+    {
+        $this->scheduledAt = $scheduledAt;
+        $this->hasScheduleOverride = $isOverride;
+        return $this;
+    }
+
+    /**
+     * Get the effective scheduled time (message override or notification default)
+     */
+    public function getEffectiveScheduledAt(): ?\DateTimeImmutable
+    {
+        // If message has its own schedule override, use it
+        if ($this->hasScheduleOverride && $this->scheduledAt) {
+            return $this->scheduledAt;
+        }
+
+        // Otherwise, use notification's scheduled time
+        if ($this->notification && $this->notification->getScheduledAt()) {
+            return $this->notification->getScheduledAt();
+        }
+
+        // Fall back to message's own scheduledAt
+        return $this->scheduledAt;
+    }
+
+    /**
+     * Check if message is ready to send based on effective schedule
+     */
+    public function isReadyToSend(\DateTimeImmutable $now = null): bool
+    {
+        $now = $now ?? new \DateTimeImmutable();
+        $effectiveTime = $this->getEffectiveScheduledAt();
+
+        if (!$effectiveTime) {
+            return true; // No schedule = ready to send
+        }
+
+        return $now >= $effectiveTime;
     }
 
     public function getRetryCount(): int
@@ -658,17 +714,6 @@ abstract class Message
         }
 
         return false;
-    }
-
-    public function getDraft(): ?NotificationDraft
-    {
-        return $this->draft;
-    }
-
-    public function setDraft(?NotificationDraft $draft): self
-    {
-        $this->draft = $draft;
-        return $this;
     }
 
     abstract public function getType(): string;
