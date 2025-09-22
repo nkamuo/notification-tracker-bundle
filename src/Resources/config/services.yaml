@@ -27,15 +27,9 @@ services:
     Nkamuo\NotificationTrackerBundle\Service\WebhookProviderRegistry:
         arguments: []
 
-    # Webhook Processor with explicit service dependencies
+    # WebhookProcessor with explicit scalar parameter binding
     Nkamuo\NotificationTrackerBundle\Service\WebhookProcessor:
         arguments:
-            $entityManager: '@doctrine.orm.entity_manager'
-            $messageTracker: '@Nkamuo\NotificationTrackerBundle\Service\MessageTracker'
-            $notificationTracker: '@Nkamuo\NotificationTrackerBundle\Service\NotificationTracker'
-            $providerRegistry: '@Nkamuo\NotificationTrackerBundle\Service\WebhookProviderRegistry'
-            $logger: '@logger'
-            $messageBus: '@messenger.bus.default'
             $asyncProcessing: true
             $verifySignatures: true
         tags:

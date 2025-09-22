@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.4] - 2025-09-22
+
+### Fixed
+- **Critical DI Fix**: Resolved WebhookProcessor dependency injection error preventing composer installations
+- **Service Container**: Fixed 'argument 3 must be defined before' error with explicit service configuration
+- **Argument Binding**: Added explicit argument binding for WebhookProcessor constructor dependencies
+
+### Added
+- **Contact Event Tracking**: Added `getLastEvent()` method to Contact entity for cross-message event tracking
+- **Event Traceability**: Enhanced event tracking to include message_id for better traceability
+- **Namespace Organization**: Moved Stamps to proper `Messenger\Stamp` namespace
+
+### Changed
+- **Service Configuration**: Enhanced WebhookProcessor service definition with explicit dependencies
+- **Documentation**: Updated all imports and examples for new Stamp namespace locations
+- **Testing**: Added comprehensive transport testing guides and examples
+
+### Technical
+- Explicit service argument binding for EntityManager, MessageTracker, NotificationTracker, etc.
+- Proper logger channel assignment for webhook processing (`notification_tracker_webhook`)
+- Enhanced event sorting by occurredAt and ID for deterministic ordering
+- Better separation of concerns with organized namespace structure
+
 ## [0.10.3] - 2025-09-22
 
 ### Fixed
