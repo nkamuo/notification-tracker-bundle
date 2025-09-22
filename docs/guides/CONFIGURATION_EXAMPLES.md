@@ -87,9 +87,9 @@ framework:
 namespace App\Service;
 
 use App\Message\EmailNotification;
-use Nkamuo\NotificationTrackerBundle\Stamp\NotificationCampaignStamp;
-use Nkamuo\NotificationTrackerBundle\Stamp\NotificationProviderStamp;
-use Nkamuo\NotificationTrackerBundle\Stamp\NotificationTemplateStamp;
+use Nkamuo\NotificationTrackerBundle\Messenger\Stamp\NotificationCampaignStamp;
+use Nkamuo\NotificationTrackerBundle\Messenger\Stamp\NotificationProviderStamp;
+use Nkamuo\NotificationTrackerBundle\Messenger\Stamp\NotificationTemplateStamp;
 use Symfony\Component\Messenger\MessageBusInterface;
 
 class CampaignService
@@ -152,8 +152,8 @@ namespace App\Service;
 use App\Message\EmailNotification;
 use App\Message\PushNotification;
 use App\Message\SmsNotification;
-use Nkamuo\NotificationTrackerBundle\Stamp\NotificationCampaignStamp;
-use Nkamuo\NotificationTrackerBundle\Stamp\NotificationProviderStamp;
+use Nkamuo\NotificationTrackerBundle\Messenger\Stamp\NotificationCampaignStamp;
+use Nkamuo\NotificationTrackerBundle\Messenger\Stamp\NotificationProviderStamp;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Messenger\Stamp\DelayStamp;
 
@@ -234,8 +234,8 @@ class NotificationOrchestrator
 namespace App\Service;
 
 use App\Message\BulkEmailNotification;
-use Nkamuo\NotificationTrackerBundle\Stamp\NotificationCampaignStamp;
-use Nkamuo\NotificationTrackerBundle\Stamp\NotificationProviderStamp;
+use Nkamuo\NotificationTrackerBundle\Messenger\Stamp\NotificationCampaignStamp;
+use Nkamuo\NotificationTrackerBundle\Messenger\Stamp\NotificationProviderStamp;
 use Symfony\Component\Messenger\MessageBusInterface;
 
 class BulkNotificationService

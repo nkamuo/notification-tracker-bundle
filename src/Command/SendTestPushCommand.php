@@ -13,9 +13,9 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Notifier\Message\PushMessage;
-use Nkamuo\NotificationTrackerBundle\Stamp\NotificationProviderStamp;
-use Nkamuo\NotificationTrackerBundle\Stamp\NotificationCampaignStamp;
-use Nkamuo\NotificationTrackerBundle\Stamp\NotificationTemplateStamp;
+use Nkamuo\NotificationTrackerBundle\Messenger\Stamp\NotificationProviderStamp;
+use Nkamuo\NotificationTrackerBundle\Messenger\Stamp\NotificationCampaignStamp;
+use Nkamuo\NotificationTrackerBundle\Messenger\Stamp\NotificationTemplateStamp;
 
 #[AsCommand(
     name: 'notification-tracker:send-push',

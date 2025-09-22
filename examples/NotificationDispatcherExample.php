@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace App\Service;
 
-use Nkamuo\NotificationTrackerBundle\Stamp\NotificationProviderStamp;
-use Nkamuo\NotificationTrackerBundle\Stamp\NotificationCampaignStamp;
-use Nkamuo\NotificationTrackerBundle\Stamp\NotificationTemplateStamp;
+use Nkamuo\NotificationTrackerBundle\Messenger\Stamp\NotificationProviderStamp;
+use Nkamuo\NotificationTrackerBundle\Messenger\Stamp\NotificationCampaignStamp;
+use Nkamuo\NotificationTrackerBundle\Messenger\Stamp\NotificationTemplateStamp;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Messenger\Stamp\DelayStamp;
 

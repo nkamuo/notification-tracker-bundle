@@ -691,4 +691,46 @@ class Contact
     {
         return $this->activities;
     }
+
+    /**
+     * Get the last event across all messages sent to this contact
+     */
+    #[Groups(['contact:read'])]
+    public function getLastEvent(): ?array
+    {
+        $allEvents = [];
+        
+        // Collect all events from all messages sent to this contact
+        foreach ($this->messageRecipients as $recipient) {
+            $message = $recipient->getMessage();
+            if ($message) {
+                foreach ($message->getEvents() as $event) {
+                    $allEvents[] = $event;
+                }
+            }
+        }
+        
+        if (empty($allEvents)) {
+            return null;
+        }
+        
+        // Sort by occurredAt DESC, then by ID DESC for deterministic ordering
+        usort($allEvents, function($a, $b) {
+            $timeComparison = $b->getOccurredAt() <=> $a->getOccurredAt();
+            if ($timeComparison === 0) {
+                // If times are equal, use ID as tiebreaker (newer ID = later event)
+                return $b->getId() <=> $a->getId();
+            }
+            return $timeComparison;
+        });
+        
+        $lastEvent = $allEvents[0];
+        
+        return [
+            'type' => $lastEvent->getEventType(),
+            'occurred_at' => $lastEvent->getOccurredAt(),
+            'metadata' => $lastEvent->getEventData(),
+            'message_id' => $lastEvent->getMessage()->getId()->toRfc4122(),
+        ];
+    }
 }

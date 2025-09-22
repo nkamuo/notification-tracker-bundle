@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Nkamuo\NotificationTrackerBundle\Messenger\Middleware;
 
-use Nkamuo\NotificationTrackerBundle\Stamp\NotificationTrackingStamp;
+use Nkamuo\NotificationTrackerBundle\Messenger\Stamp\NotificationTrackingStamp;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Mailer\Messenger\SendEmailMessage;
 use Symfony\Component\Messenger\Envelope;

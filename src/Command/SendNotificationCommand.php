@@ -16,9 +16,9 @@ use Symfony\Component\Mime\Email;
 use Symfony\Component\Notifier\Message\SmsMessage;
 use Symfony\Component\Notifier\Message\ChatMessage;
 use Symfony\Component\Notifier\Message\PushMessage;
-use Nkamuo\NotificationTrackerBundle\Stamp\NotificationProviderStamp;
-use Nkamuo\NotificationTrackerBundle\Stamp\NotificationCampaignStamp;
-use Nkamuo\NotificationTrackerBundle\Stamp\NotificationTemplateStamp;
+use Nkamuo\NotificationTrackerBundle\Messenger\Stamp\NotificationProviderStamp;
+use Nkamuo\NotificationTrackerBundle\Messenger\Stamp\NotificationCampaignStamp;
+use Nkamuo\NotificationTrackerBundle\Messenger\Stamp\NotificationTemplateStamp;
 
 #[AsCommand(
     name: 'notification-tracker:send-notification',
