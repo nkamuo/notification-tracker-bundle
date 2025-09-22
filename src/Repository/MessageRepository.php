@@ -421,8 +421,7 @@ class MessageRepository extends ServiceEntityRepository
     public function findRecentByContentFingerprint(string $contentFingerprint, \DateTime $since): ?Message
     {
         return $this->createQueryBuilder('m')
-            ->leftJoin('m.content', 'mc')
-            ->andWhere('mc.fingerprint = :fingerprint')
+            ->andWhere('m.contentFingerprint = :fingerprint')
             ->andWhere('m.createdAt >= :since')
             ->setParameter('fingerprint', $contentFingerprint)
             ->setParameter('since', $since)
