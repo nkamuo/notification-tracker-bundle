@@ -169,18 +169,11 @@ class Label
         return $this;
     }
 
-    public function incrementNotificationCount(): self
+    public function updateCount(): self
     {
-        $this->notificationCount++;
+        $this->notificationCount = $this->notifications->count();
         return $this;
     }
-
-    public function decrementNotificationCount(): self
-    {
-        $this->notificationCount = max(0, $this->notificationCount - 1);
-        return $this;
-    }
-
     /**
      * @return Collection<int, Message>
      */
@@ -217,7 +210,7 @@ class Label
     {
         if (!$this->notifications->contains($notification)) {
             $this->notifications->add($notification);
-            $this->incrementNotificationCount();
+            $this->updateCount();
         }
 
         return $this;
@@ -226,7 +219,7 @@ class Label
     public function removeNotification(Notification $notification): self
     {
         if ($this->notifications->removeElement($notification)) {
-            $this->decrementNotificationCount();
+            $this->updateCount();
         }
 
         return $this;
