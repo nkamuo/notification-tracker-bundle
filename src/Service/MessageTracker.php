@@ -233,7 +233,8 @@ class MessageTracker
         string $eventType,
         array $eventData = [],
         ?MessageRecipient $recipient = null,
-        ?WebhookPayload $webhookPayload = null
+        ?WebhookPayload $webhookPayload = null,
+        ?\DateTimeImmutable $occurredAt = null
     ): MessageEvent {
         $event = new MessageEvent();
         $event->setMessage($message);
@@ -241,6 +242,10 @@ class MessageTracker
         $event->setEventData($eventData);
         $event->setRecipient($recipient);
         $event->setWebhookPayload($webhookPayload);
+        
+        if ($occurredAt) {
+            $event->setOccurredAt($occurredAt);
+        }
 
         if (isset($eventData['ip_address'])) {
             $event->setIpAddress($eventData['ip_address']);

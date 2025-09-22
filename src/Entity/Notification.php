@@ -109,11 +109,17 @@ class Notification
     #[Groups(['notification:detail'])]
     private Collection $messages;
 
+    #[ORM\ManyToMany(targetEntity: Label::class, inversedBy: 'notifications')]
+    #[ORM\JoinTable(name: 'nt_notification_labels')]
+    #[Groups(['notification:read', 'notification:write', 'notification:list'])]
+    private Collection $labels;
+
     public function __construct()
     {
         $this->id = new Ulid();
         $this->createdAt = new \DateTimeImmutable();
         $this->messages = new ArrayCollection();
+        $this->labels = new ArrayCollection();
     }
 
     public function getId(): Ulid
@@ -357,5 +363,45 @@ class Notification
             }
         }
         return $latest;
+    }
+
+    /**
+     * @return Collection<int, Label>
+     */
+    public function getLabels(): Collection
+    {
+        return $this->labels;
+    }
+
+    public function addLabel(Label $label): self
+    {
+        if (!$this->labels->contains($label)) {
+            $this->labels->add($label);
+        }
+
+        return $this;
+    }
+
+    public function removeLabel(Label $label): self
+    {
+        $this->labels->removeElement($label);
+
+        return $this;
+    }
+
+    public function hasLabel(Label $label): bool
+    {
+        return $this->labels->contains($label);
+    }
+
+    public function hasLabelByName(string $name): bool
+    {
+        foreach ($this->labels as $label) {
+            if ($label->getName() === $name) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

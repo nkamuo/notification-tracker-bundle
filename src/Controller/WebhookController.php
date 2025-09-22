@@ -24,12 +24,24 @@ class WebhookController extends AbstractController
     #[Route('/{provider}', name: 'notification_tracker_webhook', methods: ['POST'])]
     public function webhook(Request $request, string $provider): Response
     {
+        return $this->processWebhook($request, $provider);
+    }
+
+    #[Route('/{provider}/{endpointId}', name: 'notification_tracker_webhook_endpoint', methods: ['POST'])]
+    public function webhookWithEndpoint(Request $request, string $provider, string $endpointId): Response
+    {
+        return $this->processWebhook($request, $provider, $endpointId);
+    }
+
+    private function processWebhook(Request $request, string $provider, ?string $endpointId = null): Response
+    {
         try {
             $payload = $this->getPayload($request);
             $headers = $this->getHeaders($request);
 
             $this->logger->info('Webhook received', [
                 'provider' => $provider,
+                'endpoint_id' => $endpointId,
                 'headers' => array_keys($headers),
                 'payload_size' => count($payload),
             ]);
@@ -37,7 +49,8 @@ class WebhookController extends AbstractController
             $webhookPayload = $this->webhookProcessor->processWebhook(
                 $provider,
                 $payload,
-                $headers
+                $headers,
+                $endpointId
             );
 
             return new JsonResponse([
@@ -48,6 +61,7 @@ class WebhookController extends AbstractController
         } catch (\Exception $e) {
             $this->logger->error('Webhook processing failed', [
                 'provider' => $provider,
+                'endpoint_id' => $endpointId,
                 'error' => $e->getMessage(),
             ]);
 

@@ -9,7 +9,7 @@ use Nkamuo\NotificationTrackerBundle\Entity\MessageEvent;
 class SendGridWebhookProvider implements WebhookProviderInterface
 {
     public function __construct(
-        private readonly string $secret
+        private readonly string $defaultSecret = ''
     ) {
     }
 
@@ -18,9 +18,16 @@ class SendGridWebhookProvider implements WebhookProviderInterface
         return $provider === 'sendgrid';
     }
 
-    public function verifySignature(array $payload, array $headers): bool
+    public function getProviderName(): string
     {
-        if (!isset($headers['X-Twilio-Email-Event-Webhook-Signature'])) {
+        return 'sendgrid';
+    }
+
+    public function verifySignature(array $payload, array $headers, ?string $secret = null): bool
+    {
+        $webhookSecret = $secret ?? $this->defaultSecret;
+        
+        if (empty($webhookSecret) || !isset($headers['X-Twilio-Email-Event-Webhook-Signature'])) {
             return false;
         }
 
@@ -29,7 +36,7 @@ class SendGridWebhookProvider implements WebhookProviderInterface
         
         $signedContent = $timestamp . json_encode($payload);
         $expectedSignature = base64_encode(
-            hash_hmac('sha256', $signedContent, $this->secret, true)
+            hash_hmac('sha256', $signedContent, $webhookSecret, true)
         );
 
         return hash_equals($expectedSignature, $signature);
@@ -61,10 +68,16 @@ class SendGridWebhookProvider implements WebhookProviderInterface
                 continue;
             }
 
+            $occurredAt = null;
+            if (isset($event['timestamp'])) {
+                $occurredAt = \DateTimeImmutable::createFromFormat('U', (string)$event['timestamp']);
+            }
+
             $events[] = [
                 'event_type' => $eventType,
                 'message_id' => $event['sg_message_id'] ?? $event['smtp-id'] ?? null,
                 'recipient_email' => $event['email'] ?? null,
+                'occurred_at' => $occurredAt,
                 'event_data' => [
                     'timestamp' => $event['timestamp'] ?? null,
                     'ip' => $event['ip'] ?? null,
@@ -77,5 +90,45 @@ class SendGridWebhookProvider implements WebhookProviderInterface
         }
 
         return ['events' => $events];
+    }
+
+    public function isInboundMessage(array $payload): bool
+    {
+        // SendGrid event webhooks are for delivery tracking, not inbound messages
+        return false;
+    }
+
+    public function isDeliveryEvent(array $payload): bool
+    {
+        return true;
+    }
+
+    public function getConfigurationFields(): array
+    {
+        return [
+            'webhook_secret' => [
+                'type' => 'password',
+                'label' => 'Webhook Secret',
+                'description' => 'The secret key used to verify webhook signatures from SendGrid',
+                'required' => true,
+            ],
+            'enabled' => [
+                'type' => 'boolean',
+                'label' => 'Enabled',
+                'description' => 'Enable webhook processing for this provider',
+                'default' => true,
+            ],
+        ];
+    }
+
+    public function validateConfiguration(array $config): array
+    {
+        $errors = [];
+
+        if (empty($config['webhook_secret'])) {
+            $errors['webhook_secret'] = 'Webhook secret is required';
+        }
+
+        return $errors;
     }
 }

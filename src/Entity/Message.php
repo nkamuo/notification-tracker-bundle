@@ -100,6 +100,15 @@ abstract class Message
     public const STATUS_CANCELLED = 'cancelled';
     public const STATUS_RETRYING = 'retrying';
 
+    // Direction constants
+    public const DIRECTION_OUTBOUND = 'outbound';
+    public const DIRECTION_INBOUND = 'inbound';
+
+    public const ALLOWED_DIRECTIONS = [
+        self::DIRECTION_OUTBOUND,
+        self::DIRECTION_INBOUND,
+    ];
+
     #[ORM\Id]
     #[ORM\Column(type: 'ulid', unique: true)]
     #[Groups(['message:read', 'message:list', 'notification:read'])]
@@ -119,6 +128,11 @@ abstract class Message
         self::STATUS_RETRYING
     ])]
     protected string $status = self::STATUS_PENDING;
+
+    #[ORM\Column(length: 50)]
+    #[Groups(['message:read', 'message:list', 'message:write'])]
+    #[Assert\Choice(choices: self::ALLOWED_DIRECTIONS)]
+    protected string $direction = self::DIRECTION_OUTBOUND;
 
     #[ORM\Column(length: 100, nullable: true)]
     #[Groups(['message:read', 'message:write', 'message:list'])]
@@ -191,6 +205,11 @@ abstract class Message
     #[Groups(['message:detail'])]
     protected Collection $attachments;
 
+    #[ORM\ManyToMany(targetEntity: Label::class, inversedBy: 'messages')]
+    #[ORM\JoinTable(name: 'nt_message_labels')]
+    #[Groups(['message:read', 'message:write', 'message:list'])]
+    protected Collection $labels;
+
     public function __construct()
     {
         $this->id = new Ulid();
@@ -198,6 +217,7 @@ abstract class Message
         $this->recipients = new ArrayCollection();
         $this->events = new ArrayCollection();
         $this->attachments = new ArrayCollection();
+        $this->labels = new ArrayCollection();
     }
 
     #[ORM\PreUpdate]
@@ -220,6 +240,27 @@ abstract class Message
     {
         $this->status = $status;
         return $this;
+    }
+
+    public function getDirection(): string
+    {
+        return $this->direction;
+    }
+
+    public function setDirection(string $direction): self
+    {
+        $this->direction = $direction;
+        return $this;
+    }
+
+    public function isInbound(): bool
+    {
+        return $this->direction === self::DIRECTION_INBOUND;
+    }
+
+    public function isOutbound(): bool
+    {
+        return $this->direction === self::DIRECTION_OUTBOUND;
     }
 
     public function getTransportName(): ?string
@@ -564,6 +605,49 @@ abstract class Message
             'subject' => $this->notification->getSubject(),
             'importance' => $this->notification->getImportance(),
         ];
+    }
+
+    /**
+     * @return Collection<int, Label>
+     */
+    public function getLabels(): Collection
+    {
+        return $this->labels;
+    }
+
+    public function addLabel(Label $label): self
+    {
+        if (!$this->labels->contains($label)) {
+            $this->labels->add($label);
+            $label->addMessage($this);
+        }
+
+        return $this;
+    }
+
+    public function removeLabel(Label $label): self
+    {
+        if ($this->labels->removeElement($label)) {
+            $label->removeMessage($this);
+        }
+
+        return $this;
+    }
+
+    public function hasLabel(Label $label): bool
+    {
+        return $this->labels->contains($label);
+    }
+
+    public function hasLabelByName(string $name): bool
+    {
+        foreach ($this->labels as $label) {
+            if ($label->getName() === $name) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     abstract public function getType(): string;

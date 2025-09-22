@@ -12,7 +12,8 @@ class ProcessWebhookMessage
         private readonly Ulid $webhookId,
         private readonly string $provider,
         private readonly array $payload,
-        private readonly array $headers = []
+        private readonly array $headers = [],
+        private readonly ?string $endpointId = null
     ) {
     }
 
@@ -34,5 +35,10 @@ class ProcessWebhookMessage
     public function getHeaders(): array
     {
         return $this->headers;
+    }
+
+    public function getEndpointId(): ?string
+    {
+        return $this->endpointId;
     }
 }
