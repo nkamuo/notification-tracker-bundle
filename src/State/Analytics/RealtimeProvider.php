@@ -92,9 +92,9 @@ class RealtimeProvider implements ProviderInterface
 
     private function getRecentActivity(): array
     {
-        // Get recent message events
+        // Get recent message events - simplified approach without discriminator column
         $recentEvents = $this->entityManager->createQueryBuilder()
-            ->select('e.eventType, e.occurredAt, m.type as channel, n.type as notificationType')
+            ->select('e.id, e.eventType, e.occurredAt, n.type as notificationType, m.id as messageId')
             ->from('Nkamuo\NotificationTrackerBundle\Entity\MessageEvent', 'e')
             ->join('e.message', 'm')
             ->join('m.notification', 'n')
@@ -105,12 +105,27 @@ class RealtimeProvider implements ProviderInterface
             ->getQuery()
             ->getResult();
 
-        // Format for display
+        // Format for display with channel determination
         $activity = [];
         foreach ($recentEvents as $event) {
+            // Get the message to determine its type
+            $message = $this->entityManager->find('Nkamuo\NotificationTrackerBundle\Entity\Message', $event['messageId']);
+            $channel = 'unknown';
+            
+            if ($message) {
+                $channel = match (true) {
+                    $message instanceof \Nkamuo\NotificationTrackerBundle\Entity\EmailMessage => 'email',
+                    $message instanceof \Nkamuo\NotificationTrackerBundle\Entity\SmsMessage => 'sms',
+                    $message instanceof \Nkamuo\NotificationTrackerBundle\Entity\PushMessage => 'push',
+                    $message instanceof \Nkamuo\NotificationTrackerBundle\Entity\SlackMessage => 'slack',
+                    $message instanceof \Nkamuo\NotificationTrackerBundle\Entity\TelegramMessage => 'telegram',
+                    default => 'unknown'
+                };
+            }
+            
             $activity[] = [
                 'type' => $event['eventType'],
-                'channel' => $event['channel'],
+                'channel' => $channel,
                 'notificationType' => $event['notificationType'],
                 'timestamp' => $event['occurredAt']->format('c'),
                 'timeAgo' => $this->timeAgo($event['occurredAt'])
@@ -191,22 +206,35 @@ class RealtimeProvider implements ProviderInterface
             ->getQuery()
             ->getSingleScalarResult();
 
-        // Channel performance breakdown for last hour
-        $channelPerformance = $this->entityManager->createQueryBuilder()
-            ->select('
-                m.type as channel,
-                COUNT(m.id) as total,
-                SUM(CASE WHEN m.status = :delivered THEN 1 ELSE 0 END) as delivered,
-                AVG(CASE WHEN m.sentAt IS NOT NULL AND m.createdAt IS NOT NULL THEN 
-                    EXTRACT(EPOCH FROM (m.sentAt - m.createdAt)) ELSE NULL END) as avgTime
-            ')
-            ->from('Nkamuo\NotificationTrackerBundle\Entity\Message', 'm')
-            ->where('m.createdAt >= :since')
-            ->setParameter('since', new \DateTime('-1 hour'))
-            ->setParameter('delivered', 'delivered')
-            ->groupBy('m.type')
-            ->getQuery()
-            ->getResult();
+        // Channel performance breakdown for last hour - using fallback method
+        $channelTypes = [
+            'email' => 'Nkamuo\NotificationTrackerBundle\Entity\EmailMessage',
+            'sms' => 'Nkamuo\NotificationTrackerBundle\Entity\SmsMessage',
+            'push' => 'Nkamuo\NotificationTrackerBundle\Entity\PushMessage',
+            'slack' => 'Nkamuo\NotificationTrackerBundle\Entity\SlackMessage',
+            'telegram' => 'Nkamuo\NotificationTrackerBundle\Entity\TelegramMessage'
+        ];
+
+        $channelPerformance = [];
+        foreach ($channelTypes as $channelName => $channelClass) {
+            $performance = $this->entityManager->createQueryBuilder()
+                ->select('
+                    COUNT(m.id) as total,
+                    SUM(CASE WHEN m.status = :delivered THEN 1 ELSE 0 END) as delivered,
+                    AVG(CASE WHEN m.sentAt IS NOT NULL AND m.createdAt IS NOT NULL THEN 
+                        EXTRACT(EPOCH FROM (m.sentAt - m.createdAt)) ELSE NULL END) as avgTime
+                ')
+                ->from($channelClass, 'm')
+                ->where('m.createdAt >= :since')
+                ->setParameter('since', new \DateTime('-1 hour'))
+                ->setParameter('delivered', 'delivered')
+                ->getQuery()
+                ->getOneOrNullResult();
+
+            if ($performance && $performance['total'] > 0) {
+                $channelPerformance[] = array_merge($performance, ['channel' => $channelName]);
+            }
+        }
 
         $channels = [];
         foreach ($channelPerformance as $channel) {

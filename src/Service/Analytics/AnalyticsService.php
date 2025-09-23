@@ -45,8 +45,12 @@ class AnalyticsService
             ->groupBy('n.type, n.importance');
 
         if ($channel) {
-            $qb->andWhere('m.type = :channel')
-               ->setParameter('channel', $channel);
+            // Use INSTANCE OF instead of discriminator column
+            $messageClass = $this->getMessageClassForChannel($channel);
+            if ($messageClass) {
+                $qb->andWhere('m INSTANCE OF :messageClass')
+                   ->setParameter('messageClass', $messageClass);
+            }
         }
 
         $results = $qb->getQuery()->getResult();
@@ -59,6 +63,21 @@ class AnalyticsService
             'summary' => $this->calculateDetailedSummary($results),
             'breakdowns' => $this->getBreakdownAnalysis($dateRange, $channel)
         ];
+    }
+
+    /**
+     * Helper method to map channel names to message class names
+     */
+    private function getMessageClassForChannel(string $channel): ?string
+    {
+        return match ($channel) {
+            'email' => 'Nkamuo\NotificationTrackerBundle\Entity\EmailMessage',
+            'sms' => 'Nkamuo\NotificationTrackerBundle\Entity\SmsMessage',
+            'push' => 'Nkamuo\NotificationTrackerBundle\Entity\PushMessage',
+            'slack' => 'Nkamuo\NotificationTrackerBundle\Entity\SlackMessage',
+            'telegram' => 'Nkamuo\NotificationTrackerBundle\Entity\TelegramMessage',
+            default => null
+        };
     }
 
     public function getChannelAnalytics(string $period, bool $compare): array
@@ -90,17 +109,21 @@ class AnalyticsService
     {
         $dateRange = $this->parsePeriod($period);
         
+        // Get the message class for this channel
+        $messageClass = $this->getMessageClassForChannel($channel);
+        if (!$messageClass) {
+            throw new \InvalidArgumentException("Unknown channel: {$channel}");
+        }
+        
         // Detailed message status breakdown for specific channel
         $qb = $this->entityManager->createQueryBuilder()
             ->select('m.status, COUNT(m.id) as count, 
                      AVG(CASE WHEN m.sentAt IS NOT NULL THEN 
                          EXTRACT(EPOCH FROM (m.sentAt - m.createdAt)) 
                      ELSE NULL END) as avgDeliveryTime')
-            ->from('Nkamuo\NotificationTrackerBundle\Entity\Message', 'm')
-            ->where('m.type = :channel')
-            ->andWhere('m.createdAt >= :startDate')
+            ->from($messageClass, 'm')
+            ->where('m.createdAt >= :startDate')
             ->andWhere('m.createdAt <= :endDate')
-            ->setParameter('channel', $channel)
             ->setParameter('startDate', $dateRange['start'])
             ->setParameter('endDate', $dateRange['end'])
             ->groupBy('m.status');
@@ -113,11 +136,9 @@ class AnalyticsService
                      SUM(CASE WHEN m.status = :sent THEN 1 ELSE 0 END) as sent,
                      SUM(CASE WHEN m.status = :delivered THEN 1 ELSE 0 END) as delivered,
                      SUM(CASE WHEN m.status = :failed THEN 1 ELSE 0 END) as failed')
-            ->from('Nkamuo\NotificationTrackerBundle\Entity\Message', 'm')
-            ->where('m.type = :channel')
-            ->andWhere('m.createdAt >= :startDate')
+            ->from($messageClass, 'm')
+            ->where('m.createdAt >= :startDate')
             ->andWhere('m.createdAt <= :endDate')
-            ->setParameter('channel', $channel)
             ->setParameter('startDate', $dateRange['start'])
             ->setParameter('endDate', $dateRange['end'])
             ->setParameter('sent', 'sent')
@@ -176,27 +197,54 @@ class AnalyticsService
     {
         $dateRange = $this->parsePeriod($period);
         
-        $qb = $this->entityManager->createQueryBuilder()
-            ->select('m.status, COUNT(m.id) as count')
-            ->from('Nkamuo\NotificationTrackerBundle\Entity\Message', 'm')
-            ->where('m.status IN (:failureStates)')
-            ->andWhere('m.createdAt >= :startDate')
-            ->andWhere('m.createdAt <= :endDate')
-            ->setParameter('failureStates', ['failed', 'bounced'])
-            ->setParameter('startDate', $dateRange['start'])
-            ->setParameter('endDate', $dateRange['end']);
-
         if ($channel) {
-            $qb->andWhere('m.type = :channel')
-               ->setParameter('channel', $channel);
+            // Use specific channel class for targeted analysis
+            $messageClass = $this->getMessageClassForChannel($channel);
+            if (!$messageClass) {
+                throw new \InvalidArgumentException("Unknown channel: {$channel}");
+            }
+            
+            $qb = $this->entityManager->createQueryBuilder()
+                ->select('m.status, COUNT(m.id) as count')
+                ->from($messageClass, 'm')
+                ->where('m.status IN (:failureStates)')
+                ->andWhere('m.createdAt >= :startDate')
+                ->andWhere('m.createdAt <= :endDate')
+                ->setParameter('failureStates', ['failed', 'bounced'])
+                ->setParameter('startDate', $dateRange['start'])
+                ->setParameter('endDate', $dateRange['end']);
+        } else {
+            // For all channels, use the fallback approach
+            $qb = $this->entityManager->createQueryBuilder()
+                ->select('m.status, COUNT(m.id) as count')
+                ->from('Nkamuo\NotificationTrackerBundle\Entity\Message', 'm')
+                ->where('m.status IN (:failureStates)')
+                ->andWhere('m.createdAt >= :startDate')
+                ->andWhere('m.createdAt <= :endDate')
+                ->setParameter('failureStates', ['failed', 'bounced'])
+                ->setParameter('startDate', $dateRange['start'])
+                ->setParameter('endDate', $dateRange['end']);
         }
 
         switch ($groupBy) {
             case 'channel':
-                $qb->addSelect('m.type as channel')
-                   ->groupBy('m.status, m.type');
+                if (!$channel) {
+                    // Use fallback method to get channel breakdown
+                    return $this->getFailureAnalyticsFallback($dateRange, $groupBy);
+                }
+                $qb->groupBy('m.status');
                 break;
             case 'transport':
+                $qb->addSelect('m.transportName as transport')
+                   ->groupBy('m.status, m.transportName');
+                break;
+            case 'day':
+                $qb->addSelect('DATE(m.createdAt) as day')
+                   ->groupBy('m.status, DATE(m.createdAt)');
+                break;
+            default: // reason
+                $qb->groupBy('m.status');
+        }
                 $qb->addSelect('m.transportName as transport')
                    ->groupBy('m.status, m.transportName');
                 break;
@@ -219,6 +267,41 @@ class AnalyticsService
             'recommendations' => $this->generateFailureRecommendations($failures, $channel),
             'trends' => $this->getFailureTrends($dateRange, $channel)
         ];
+    }
+
+    /**
+     * Fallback method for failure analytics when channel breakdown is needed
+     */
+    private function getFailureAnalyticsFallback(array $dateRange, string $groupBy): array
+    {
+        $channels = ['email', 'sms', 'push', 'slack', 'telegram'];
+        $failures = [];
+        
+        foreach ($channels as $channel) {
+            $messageClass = $this->getMessageClassForChannel($channel);
+            if (!$messageClass) {
+                continue;
+            }
+            
+            $channelFailures = $this->entityManager->createQueryBuilder()
+                ->select('m.status, COUNT(m.id) as count')
+                ->from($messageClass, 'm')
+                ->where('m.status IN (:failureStates)')
+                ->andWhere('m.createdAt >= :startDate')
+                ->andWhere('m.createdAt <= :endDate')
+                ->setParameter('failureStates', ['failed', 'bounced'])
+                ->setParameter('startDate', $dateRange['start'])
+                ->setParameter('endDate', $dateRange['end'])
+                ->groupBy('m.status')
+                ->getQuery()
+                ->getResult();
+                
+            foreach ($channelFailures as $failure) {
+                $failures[] = array_merge($failure, ['channel' => $channel]);
+            }
+        }
+        
+        return $failures;
     }
 
     public function getCostAnalytics(string $period, string $currency): array
