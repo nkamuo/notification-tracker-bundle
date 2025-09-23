@@ -496,23 +496,7 @@ class AnalyticsService
     private function getChannelMetrics(array $dateRange, ?string $specificChannel = null): array
     {
         // Database schema doesn't have discriminator column yet, use fallback only
-        $results = $this->getChannelMetricsFallback($dateRange, $specificChannel);
-        
-        $channelData = [];
-        foreach ($results as $result) {
-            $total = $result['total'];
-            $delivered = $result['delivered'];
-            
-            $channelData[$result['channel']] = [
-                'total' => $total,
-                'sent' => $result['sent'],
-                'delivered' => $delivered,
-                'failed' => $result['failed'],
-                'deliveryRate' => $total > 0 ? round(($delivered / $total) * 100, 2) : 0,
-                'engagementRate' => 0, // Disable engagement rate for now
-                'cost' => $this->getEstimatedChannelCost($result['channel'], $total)
-            ];
-        }
+        $channelData = $this->getChannelMetricsFallback($dateRange, $specificChannel);
         
         return $specificChannel ? ($channelData[$specificChannel] ?? []) : $channelData;
     }
