@@ -230,33 +230,24 @@ class AnalyticsService
             case 'channel':
                 if (!$channel) {
                     // Use fallback method to get channel breakdown
-                    return $this->getFailureAnalyticsFallback($dateRange, $groupBy);
+                    $failures = $this->getFailureAnalyticsFallback($dateRange, $groupBy);
+                } else {
+                    $failures = $qb->groupBy('m.status')->getQuery()->getResult();
                 }
-                $qb->groupBy('m.status');
                 break;
             case 'transport':
                 $qb->addSelect('m.transportName as transport')
                    ->groupBy('m.status, m.transportName');
+                $failures = $qb->getQuery()->getResult();
                 break;
             case 'day':
                 $qb->addSelect('DATE(m.createdAt) as day')
                    ->groupBy('m.status, DATE(m.createdAt)');
+                $failures = $qb->getQuery()->getResult();
                 break;
             default: // reason
-                $qb->groupBy('m.status');
+                $failures = $qb->groupBy('m.status')->getQuery()->getResult();
         }
-                $qb->addSelect('m.transportName as transport')
-                   ->groupBy('m.status, m.transportName');
-                break;
-            case 'day':
-                $qb->addSelect('DATE(m.createdAt) as day')
-                   ->groupBy('m.status, DATE(m.createdAt)');
-                break;
-            default: // reason
-                $qb->groupBy('m.status');
-        }
-
-        $failures = $qb->getQuery()->getResult();
         
         return [
             'period' => $period,
