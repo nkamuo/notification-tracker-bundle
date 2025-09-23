@@ -10,7 +10,7 @@ use Nkamuo\NotificationTrackerBundle\Controller\Api\SendEmailController;
 use Symfony\Component\Serializer\Annotation\Groups;
 
 #[ApiResource(
-    shortName: 'SendEmail',
+    shortName: 'SendEmailMessage',
     operations: [
         new Post(
             uriTemplate: '/send/email',
@@ -18,7 +18,8 @@ use Symfony\Component\Serializer\Annotation\Groups;
             name: 'send_email',
             description: 'Send an email immediately or save as draft/schedule'
         )
-    ]
+        ],
+        routePrefix: '/notification-tracker',
 )]
 class SendEmailResource
 {

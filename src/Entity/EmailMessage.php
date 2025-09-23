@@ -5,9 +5,13 @@ declare(strict_types=1);
 namespace Nkamuo\NotificationTrackerBundle\Entity;
 
 use ApiPlatform\Metadata\ApiResource;
+use ApiPlatform\Metadata\Get;
+use ApiPlatform\Metadata\GetCollection;
+use ApiPlatform\Metadata\Put;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Nkamuo\NotificationTrackerBundle\Config\ApiRoutes;
+use Nkamuo\NotificationTrackerBundle\Controller\Api\SendEmailController;
 use Nkamuo\NotificationTrackerBundle\Repository\EmailMessageRepository;
 use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Validator\Constraints as Assert;
@@ -16,7 +20,14 @@ use Symfony\Component\Validator\Constraints as Assert;
 #[ORM\Table(name: 'notification_tracker_email_messages')]
 #[ApiResource(
     shortName: 'EmailMessage',
-    description: 'Email message tracking',
+    description: 'Email message tracking', operations: [
+        new GetCollection(),
+        new Get(),
+        new Put(
+            controller: SendEmailController::class,
+        ),
+        // new Delete(),
+    ],
     normalizationContext: ['groups' => ['message:read', 'email:read']],
     denormalizationContext: ['groups' => ['message:write', 'email:write']],
     routePrefix: ApiRoutes::BASE_PREFIX,

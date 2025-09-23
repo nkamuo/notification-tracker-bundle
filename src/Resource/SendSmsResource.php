@@ -17,7 +17,8 @@ use Nkamuo\NotificationTrackerBundle\Controller\Api\SendSmsController;
             name: 'send_sms',
             description: 'Send an SMS immediately or save as draft/schedule'
         )
-    ]
+        ],
+        routePrefix: '/notification-tracker',
 )]
 class SendSmsResource
 {

@@ -17,7 +17,8 @@ use Nkamuo\NotificationTrackerBundle\Controller\Api\SendSlackController;
             name: 'send_slack',
             description: 'Send a Slack message immediately or save as draft/schedule'
         )
-    ]
+        ],
+        routePrefix: '/notification-tracker',
 )]
 class SendSlackResource
 {

@@ -17,7 +17,8 @@ use Nkamuo\NotificationTrackerBundle\Controller\Api\SendNotificationController;
             name: 'send_notification',
             description: 'Send a notification to multiple channels (email, SMS, Slack) simultaneously'
         )
-    ]
+        ],
+        routePrefix: '/notification-tracker',
 )]
 class SendNotificationResource
 {

@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Nkamuo\NotificationTrackerBundle\Entity;
 
 use ApiPlatform\Metadata\ApiResource;
+use ApiPlatform\Metadata\Get;
+use ApiPlatform\Metadata\GetCollection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Nkamuo\NotificationTrackerBundle\Config\ApiRoutes;
@@ -15,7 +17,14 @@ use Symfony\Component\Serializer\Annotation\Groups;
 #[ORM\Table(name: 'notification_tracker_telegram_messages')]
 #[ApiResource(
     shortName: 'TelegramMessage',
-    description: 'Telegram message tracking',
+    description: 'Telegram message tracking', operations: [
+        new GetCollection(),
+        new Get(),
+        // new Put(
+        //     controller: SendTelegramController::class,
+        // ),
+        // new Delete(),
+    ],
     normalizationContext: ['groups' => ['message:read', 'telegram:read']],
     denormalizationContext: ['groups' => ['message:write', 'telegram:write']],
     routePrefix: ApiRoutes::BASE_PREFIX,
