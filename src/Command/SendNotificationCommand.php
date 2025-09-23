@@ -16,9 +16,11 @@ use Symfony\Component\Mime\Email;
 use Symfony\Component\Notifier\Message\SmsMessage;
 use Symfony\Component\Notifier\Message\ChatMessage;
 use Symfony\Component\Notifier\Message\PushMessage;
+use Symfony\Component\Uid\Ulid;
 use Nkamuo\NotificationTrackerBundle\Messenger\Stamp\NotificationProviderStamp;
 use Nkamuo\NotificationTrackerBundle\Messenger\Stamp\NotificationCampaignStamp;
 use Nkamuo\NotificationTrackerBundle\Messenger\Stamp\NotificationTemplateStamp;
+use Nkamuo\NotificationTrackerBundle\Messenger\Stamp\NotificationTrackingStamp;
 
 #[AsCommand(
     name: 'notification-tracker:send-notification',
@@ -184,7 +186,9 @@ class SendNotificationCommand extends Command
     private function createStamps(string $provider, int $priority, ?string $campaign, ?string $template): array
     {
         $stamps = [
-            new NotificationProviderStamp($provider, $priority)
+            new NotificationProviderStamp($provider, $priority),
+            // Always add a tracking stamp for consistent tracking regardless of sync/async mode
+            new NotificationTrackingStamp((string) new \Symfony\Component\Uid\Ulid())
         ];
 
         if ($campaign) {

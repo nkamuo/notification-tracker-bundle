@@ -13,9 +13,11 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Notifier\Message\PushMessage;
+use Symfony\Component\Uid\Ulid;
 use Nkamuo\NotificationTrackerBundle\Messenger\Stamp\NotificationProviderStamp;
 use Nkamuo\NotificationTrackerBundle\Messenger\Stamp\NotificationCampaignStamp;
 use Nkamuo\NotificationTrackerBundle\Messenger\Stamp\NotificationTemplateStamp;
+use Nkamuo\NotificationTrackerBundle\Messenger\Stamp\NotificationTrackingStamp;
 
 #[AsCommand(
     name: 'notification-tracker:send-push',
@@ -61,7 +63,9 @@ class SendTestPushCommand extends Command
 
         // Create stamps
         $stamps = [
-            new NotificationProviderStamp($provider, $priority)
+            new NotificationProviderStamp($provider, $priority),
+            // Always add a tracking stamp for consistent tracking regardless of sync/async mode
+            new NotificationTrackingStamp((string) new \Symfony\Component\Uid\Ulid())
         ];
 
         if ($campaign) {

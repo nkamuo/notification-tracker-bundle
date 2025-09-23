@@ -14,6 +14,7 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Mailer\Messenger\SendEmailMessage;
 use Symfony\Component\Mime\Email;
+use Symfony\Component\Uid\Ulid;
 use Nkamuo\NotificationTrackerBundle\Messenger\Stamp\NotificationProviderStamp;
 use Nkamuo\NotificationTrackerBundle\Messenger\Stamp\NotificationCampaignStamp;
 use Nkamuo\NotificationTrackerBundle\Messenger\Stamp\NotificationTemplateStamp;
@@ -77,7 +78,9 @@ class SendTestEmailCommand extends Command
 
         // Create stamps
         $stamps = [
-            new NotificationProviderStamp($provider, $priority)
+            new NotificationProviderStamp($provider, $priority),
+            // Always add a tracking stamp for consistent tracking regardless of sync/async mode
+            new NotificationTrackingStamp((string) new \Symfony\Component\Uid\Ulid())
         ];
 
         if ($campaign) {
