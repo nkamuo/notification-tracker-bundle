@@ -885,6 +885,107 @@ abstract class Message
         return $this;
     }
 
+    // ========================================
+    // REFERENCE METHODS
+    // ========================================
+
+    /**
+     * Set a reference value
+     * 
+     * @param string $key
+     * @param string $value
+     * @return self
+     */
+    public function setRef(string $key, string $value): self
+    {
+        if ($this->metadata === null) {
+            $this->metadata = [];
+        }
+        
+        if (!isset($this->metadata['refs'])) {
+            $this->metadata['refs'] = [];
+        }
+        
+        $this->metadata['refs'][$key] = $value;
+        return $this;
+    }
+
+    /**
+     * Get a reference value
+     * 
+     * @param string $key
+     * @param string|null $default
+     * @return string|null
+     */
+    public function getRef(string $key, ?string $default = null): ?string
+    {
+        return $this->metadata['refs'][$key] ?? $default;
+    }
+
+    /**
+     * Check if a reference exists
+     * 
+     * @param string $key
+     * @return bool
+     */
+    public function hasRef(string $key): bool
+    {
+        return isset($this->metadata['refs'][$key]);
+    }
+
+    /**
+     * Remove a reference
+     * 
+     * @param string $key
+     * @return self
+     */
+    public function removeRef(string $key): self
+    {
+        if (isset($this->metadata['refs'][$key])) {
+            unset($this->metadata['refs'][$key]);
+        }
+        return $this;
+    }
+
+    /**
+     * Get all references
+     * 
+     * @return array
+     */
+    public function getRefs(): array
+    {
+        return $this->metadata['refs'] ?? [];
+    }
+
+    /**
+     * Set multiple references at once
+     * 
+     * @param array $refs
+     * @return self
+     */
+    public function setRefs(array $refs): self
+    {
+        if ($this->metadata === null) {
+            $this->metadata = [];
+        }
+        
+        $this->metadata['refs'] = $refs;
+        return $this;
+    }
+
+    /**
+     * Clear all references
+     * 
+     * @return self
+     */
+    public function clearRefs(): self
+    {
+        if (isset($this->metadata['refs'])) {
+            unset($this->metadata['refs']);
+        }
+        return $this;
+    }
+
     abstract public function getType(): string;
 
     // Abstract method for getting subject (to be implemented by concrete classes)
