@@ -752,12 +752,23 @@ class AnalyticsService
                 $result = $qb->getQuery()->getSingleResult();
                 
                 if ($result && $result['total'] > 0) {
-                    $results[] = [
-                        'channel' => $type,
-                        'total' => $result['total'],
-                        'sent' => $result['sent'],
-                        'delivered' => $result['delivered'],
-                        'failed' => $result['failed'],
+                    $total = (int) $result['total'];
+                    $sent = (int) $result['sent'];
+                    $delivered = (int) $result['delivered'];
+                    $failed = (int) $result['failed'];
+                    
+                    $deliveryRate = $sent > 0 ? ($delivered / $sent) * 100 : 0;
+                    $engagementRate = 0; // Will implement properly later
+                    $cost = $this->getEstimatedChannelCost($type, $total);
+                    
+                    $results[$type] = [
+                        'total' => $total,
+                        'sent' => (string) $sent,
+                        'delivered' => (string) $delivered,
+                        'failed' => (string) $failed,
+                        'deliveryRate' => round($deliveryRate, 2),
+                        'engagementRate' => $engagementRate,
+                        'cost' => $cost
                     ];
                 }
             } catch (\Exception $e) {
@@ -786,21 +797,32 @@ class AnalyticsService
 
                 $result = $qb->getQuery()->getSingleResult();
                 
-                $results[] = [
-                    'channel' => $specificChannel ?? 'unknown',
-                    'total' => $result['total'] ?? 0,
-                    'sent' => $result['sent'] ?? 0,
-                    'delivered' => $result['delivered'] ?? 0,
-                    'failed' => $result['failed'] ?? 0,
+                $total = (int) ($result['total'] ?? 0);
+                $sent = (int) ($result['sent'] ?? 0);
+                $delivered = (int) ($result['delivered'] ?? 0);
+                $failed = (int) ($result['failed'] ?? 0);
+                
+                $deliveryRate = $sent > 0 ? ($delivered / $sent) * 100 : 0;
+                
+                $results[$specificChannel ?? 'unknown'] = [
+                    'total' => $total,
+                    'sent' => (string) $sent,
+                    'delivered' => (string) $delivered,
+                    'failed' => (string) $failed,
+                    'deliveryRate' => round($deliveryRate, 2),
+                    'engagementRate' => 0,
+                    'cost' => null
                 ];
             } catch (\Exception $e) {
                 // Return empty result if everything fails
-                $results[] = [
-                    'channel' => $specificChannel ?? 'unknown',
+                $results[$specificChannel ?? 'unknown'] = [
                     'total' => 0,
-                    'sent' => 0,
-                    'delivered' => 0,
-                    'failed' => 0,
+                    'sent' => '0',
+                    'delivered' => '0',
+                    'failed' => '0',
+                    'deliveryRate' => 0.0,
+                    'engagementRate' => 0,
+                    'cost' => null
                 ];
             }
         }
