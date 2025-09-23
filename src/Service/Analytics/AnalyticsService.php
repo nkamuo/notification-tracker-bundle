@@ -424,37 +424,8 @@ class AnalyticsService
 
     private function getChannelMetrics(array $dateRange, ?string $specificChannel = null): array
     {
-        try {
-            $qb = $this->messageRepository->createQueryBuilder('m')
-                ->select('
-                    m.type as channel,
-                    COUNT(m.id) as total,
-                    SUM(CASE WHEN m.status = :sent THEN 1 ELSE 0 END) as sent,
-                    SUM(CASE WHEN m.status = :delivered THEN 1 ELSE 0 END) as delivered,
-                    SUM(CASE WHEN m.status = :failed THEN 1 ELSE 0 END) as failed
-                ')
-                ->where('m.createdAt >= :start')
-                ->andWhere('m.createdAt <= :end')
-                ->setParameter('start', $dateRange['start'])
-                ->setParameter('end', $dateRange['end'])
-                ->setParameter('sent', 'sent')
-                ->setParameter('delivered', 'delivered')
-                ->setParameter('failed', 'failed')
-                ->groupBy('m.type');
-
-            if ($specificChannel) {
-                $qb->andWhere('m.type = :channel')
-                   ->setParameter('channel', $specificChannel);
-            }
-
-            $results = $qb->getQuery()->getResult();
-        } catch (\Doctrine\ORM\Query\QueryException $e) {
-            // Fallback: If discriminator column doesn't exist, use class-based detection
-            $results = $this->getChannelMetricsFallback($dateRange, $specificChannel);
-        } catch (\Exception $e) {
-            // Broader exception handling for any other issues
-            $results = $this->getChannelMetricsFallback($dateRange, $specificChannel);
-        }
+        // Database schema doesn't have discriminator column yet, use fallback only
+        $results = $this->getChannelMetricsFallback($dateRange, $specificChannel);
         
         $channelData = [];
         foreach ($results as $result) {
@@ -467,7 +438,7 @@ class AnalyticsService
                 'delivered' => $delivered,
                 'failed' => $result['failed'],
                 'deliveryRate' => $total > 0 ? round(($delivered / $total) * 100, 2) : 0,
-                'engagementRate' => $this->getChannelEngagementRate($result['channel'], $dateRange),
+                'engagementRate' => 0, // Disable engagement rate for now
                 'cost' => $this->getEstimatedChannelCost($result['channel'], $total)
             ];
         }
@@ -477,35 +448,8 @@ class AnalyticsService
 
     private function getChannelEngagementRate(string $channel, array $dateRange): float
     {
-        $engagementCount = $this->entityManager->createQueryBuilder()
-            ->select('COUNT(DISTINCT r.id)')
-            ->from('Nkamuo\NotificationTrackerBundle\Entity\MessageEvent', 'e')
-            ->join('e.recipient', 'r')
-            ->join('e.message', 'm')
-            ->where('e.eventType IN (:engagementTypes)')
-            ->andWhere('m.type = :channel')
-            ->andWhere('e.occurredAt >= :start')
-            ->andWhere('e.occurredAt <= :end')
-            ->setParameter('engagementTypes', ['opened', 'clicked'])
-            ->setParameter('channel', $channel)
-            ->setParameter('start', $dateRange['start'])
-            ->setParameter('end', $dateRange['end'])
-            ->getQuery()
-            ->getSingleScalarResult();
-
-        $deliveredCount = $this->messageRepository->createQueryBuilder('m')
-            ->select('SUM(CASE WHEN m.status = :delivered THEN 1 ELSE 0 END)')
-            ->where('m.type = :channel')
-            ->andWhere('m.createdAt >= :start')
-            ->andWhere('m.createdAt <= :end')
-            ->setParameter('channel', $channel)
-            ->setParameter('delivered', 'delivered')
-            ->setParameter('start', $dateRange['start'])
-            ->setParameter('end', $dateRange['end'])
-            ->getQuery()
-            ->getSingleScalarResult();
-
-        return $deliveredCount > 0 ? round(($engagementCount / $deliveredCount) * 100, 2) : 0;
+        // Disabled due to discriminator column issue
+        return 0.0;
     }
 
     private function getEstimatedChannelCost(string $channel, int $messageCount): ?float
