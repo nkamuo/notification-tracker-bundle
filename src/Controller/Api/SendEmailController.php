@@ -8,6 +8,8 @@ use Doctrine\ORM\EntityManagerInterface;
 use Nkamuo\NotificationTrackerBundle\Entity\EmailMessage;
 use Nkamuo\NotificationTrackerBundle\Entity\MessageContent;
 use Nkamuo\NotificationTrackerBundle\Entity\MessageRecipient;
+use Nkamuo\NotificationTrackerBundle\Enum\NotificationDirection;
+use Nkamuo\NotificationTrackerBundle\Enum\MessageStatus;
 use Nkamuo\NotificationTrackerBundle\Service\MessageTracker;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -45,8 +47,8 @@ class SendEmailController extends AbstractController
         try {
             // Create tracked message
             $message = new EmailMessage();
-            $message->setDirection($message::DIRECTION_OUTBOUND);
-            $message->setStatus($message::STATUS_QUEUED);
+            $message->setDirection(NotificationDirection::OUTBOUND);
+            $message->setStatus(MessageStatus::QUEUED);
 
             // Set labels if provided
             if (isset($requestData['labels']) && is_array($requestData['labels'])) {

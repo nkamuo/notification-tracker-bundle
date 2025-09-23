@@ -9,6 +9,7 @@ use Nkamuo\NotificationTrackerBundle\Entity\MessageEvent;
 use Nkamuo\NotificationTrackerBundle\Entity\WebhookPayload;
 use Nkamuo\NotificationTrackerBundle\Entity\WebhookEndpoint;
 use Nkamuo\NotificationTrackerBundle\Entity\Message;
+use Nkamuo\NotificationTrackerBundle\Enum\NotificationDirection;
 use Nkamuo\NotificationTrackerBundle\Message\ProcessWebhookMessage;
 use Nkamuo\NotificationTrackerBundle\Webhook\Provider\WebhookProviderInterface;
 use Psr\Log\LoggerInterface;
@@ -169,7 +170,7 @@ class WebhookProcessor
             );
 
             $message->setTransportName($provider);
-            $message->setDirection(Message::DIRECTION_INBOUND);
+            $message->setDirection(NotificationDirection::INBOUND);
             
             if (isset($messageData['external_id'])) {
                 $message->setMetadata(array_merge(

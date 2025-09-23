@@ -22,8 +22,11 @@ use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Nkamuo\NotificationTrackerBundle\Repository\NotificationRepository;
 use Nkamuo\NotificationTrackerBundle\Config\ApiRoutes;
+use Nkamuo\NotificationTrackerBundle\Enum\NotificationDirection;
+use Nkamuo\NotificationTrackerBundle\Enum\NotificationStatus;
 use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Uid\Ulid;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: NotificationRepository::class)]
 #[ORM\Table(name: 'notification_tracker_notifications')]
@@ -91,20 +94,31 @@ class Notification
     public const IMPORTANCE_HIGH = 'high';
     public const IMPORTANCE_URGENT = 'urgent';
 
-    // Status constants for workflow management
+    // Status constants for workflow management - DEPRECATED: Use NotificationStatus enum instead
+    /** @deprecated Use NotificationStatus::DRAFT instead */
     public const STATUS_DRAFT = 'draft';
+    /** @deprecated Use NotificationStatus::SCHEDULED instead */
     public const STATUS_SCHEDULED = 'scheduled';
+    /** @deprecated Use NotificationStatus::QUEUED instead */
     public const STATUS_QUEUED = 'queued';
+    /** @deprecated Use NotificationStatus::SENDING instead */
     public const STATUS_SENDING = 'sending';
+    /** @deprecated Use NotificationStatus::SENT instead */
     public const STATUS_SENT = 'sent';
+    /** @deprecated Use NotificationStatus::FAILED instead */
     public const STATUS_FAILED = 'failed';
+    /** @deprecated Use NotificationStatus::CANCELLED instead */
     public const STATUS_CANCELLED = 'cancelled';
 
-    // Direction constants for message/notification flow type
+    // Direction constants for message/notification flow type - DEPRECATED: Use NotificationDirection enum instead
+    /** @deprecated Use NotificationDirection::INBOUND instead */
     public const DIRECTION_INBOUND = 'inbound';   // Received notifications/messages
+    /** @deprecated Use NotificationDirection::OUTBOUND instead */
     public const DIRECTION_OUTBOUND = 'outbound'; // Sent notifications/messages  
+    /** @deprecated Use NotificationDirection::DRAFT instead */
     public const DIRECTION_DRAFT = 'draft';       // Draft notifications (not yet sent)
 
+    /** @deprecated Use NotificationStatus::values() instead */
     public const ALLOWED_STATUSES = [
         self::STATUS_DRAFT,
         self::STATUS_SCHEDULED,
@@ -115,6 +129,7 @@ class Notification
         self::STATUS_CANCELLED,
     ];
 
+    /** @deprecated Use NotificationDirection::values() instead */
     public const ALLOWED_DIRECTIONS = [
         self::DIRECTION_INBOUND,
         self::DIRECTION_OUTBOUND,
@@ -134,13 +149,13 @@ class Notification
     #[Groups(['notification:read', 'notification:list', 'notification:write', 'notification:create'])]
     private string $importance = self::IMPORTANCE_NORMAL;
 
-    #[ORM\Column(length: 20)]
+    #[ORM\Column(type: 'string', enumType: NotificationStatus::class)]
     #[Groups(['notification:read', 'notification:list', 'notification:write', 'notification:create'])]
-    private string $status = self::STATUS_DRAFT;
+    private NotificationStatus $status = NotificationStatus::DRAFT;
 
-    #[ORM\Column(length: 20)]
+    #[ORM\Column(type: 'string', enumType: NotificationDirection::class)]
     #[Groups(['notification:read', 'notification:list', 'notification:write', 'notification:create'])]
-    private string $direction = self::DIRECTION_DRAFT;
+    private NotificationDirection $direction = NotificationDirection::DRAFT;
 
     #[ORM\Column(type: Types::JSON)]
     #[Groups(['notification:read', 'notification:write', 'notification:list', 'notification:detail', 'notification:create'])]
@@ -486,25 +501,25 @@ class Notification
         return false;
     }
 
-    public function getStatus(): string
+    public function getStatus(): NotificationStatus
     {
         return $this->status;
     }
 
-    public function setStatus(string $status): self
+    public function setStatus(NotificationStatus|string $status): self
     {
-        $this->status = $status;
+        $this->status = $status instanceof NotificationStatus ? $status : NotificationStatus::from($status);
         return $this;
     }
 
-    public function getDirection(): string
+    public function getDirection(): NotificationDirection
     {
         return $this->direction;
     }
 
-    public function setDirection(string $direction): self
+    public function setDirection(NotificationDirection|string $direction): self
     {
-        $this->direction = $direction;
+        $this->direction = $direction instanceof NotificationDirection ? $direction : NotificationDirection::from($direction);
         return $this;
     }
 
@@ -558,22 +573,22 @@ class Notification
     // Convenience methods for checking status
     public function isDraft(): bool
     {
-        return $this->status === self::STATUS_DRAFT;
+        return $this->status === NotificationStatus::DRAFT;
     }
 
     public function isScheduled(): bool
     {
-        return $this->status === self::STATUS_SCHEDULED;
+        return $this->status === NotificationStatus::SCHEDULED;
     }
 
     public function isSent(): bool
     {
-        return $this->status === self::STATUS_SENT;
+        return $this->status === NotificationStatus::SENT;
     }
 
     public function isQueued(): bool
     {
-        return $this->status === self::STATUS_QUEUED;
+        return $this->status === NotificationStatus::QUEUED;
     }
 
     /**
@@ -581,7 +596,7 @@ class Notification
      */
     public function isFailed(): bool
     {
-        return $this->status === self::STATUS_FAILED;
+        return $this->status === NotificationStatus::FAILED;
     }
 
     /**
@@ -589,7 +604,196 @@ class Notification
      */
     public function isCancelled(): bool
     {
-        return $this->status === self::STATUS_CANCELLED;
+        return $this->status === NotificationStatus::CANCELLED;
+    }
+
+    // ========================================
+    // ENUM HELPER METHODS
+    // ========================================
+
+    /**
+     * Get status as enum (alias for getStatus() for backward compatibility)
+     * 
+     * @return NotificationStatus
+     */
+    public function getStatusEnum(): NotificationStatus
+    {
+        return $this->status;
+    }
+
+    /**
+     * Set status from enum (alias for setStatus() for backward compatibility)
+     * 
+     * @param NotificationStatus $status
+     * @return self
+     */
+    public function setStatusEnum(NotificationStatus $status): self
+    {
+        $this->status = $status;
+        return $this;
+    }
+
+    /**
+     * Get direction as enum (alias for getDirection() for backward compatibility)
+     * 
+     * @return NotificationDirection
+     */
+    public function getDirectionEnum(): NotificationDirection
+    {
+        return $this->direction;
+    }
+
+    /**
+     * Set direction from enum (alias for setDirection() for backward compatibility)
+     * 
+     * @param NotificationDirection $direction
+     * @return self
+     */
+    public function setDirectionEnum(NotificationDirection $direction): self
+    {
+        $this->direction = $direction;
+        return $this;
+    }
+
+    /**
+     * Check if notification is in draft state
+     * 
+     * @return bool
+     */
+    public function isDirectionDraft(): bool
+    {
+        return $this->direction->isDraft();
+    }
+
+    /**
+     * Check if notification is outbound
+     * 
+     * @return bool
+     */
+    public function isDirectionOutbound(): bool
+    {
+        return $this->direction->isOutgoing();
+    }
+
+    /**
+     * Check if notification is inbound
+     * 
+     * @return bool
+     */
+    public function isDirectionInbound(): bool
+    {
+        return $this->direction->isIncoming();
+    }
+
+    /**
+     * Check if status indicates the notification is active/processable
+     * 
+     * @return bool
+     */
+    public function isStatusActive(): bool
+    {
+        return $this->status->isActive();
+    }
+
+    /**
+     * Check if status indicates the notification is completed
+     * 
+     * @return bool
+     */
+    public function isStatusCompleted(): bool
+    {
+        return $this->status->isCompleted();
+    }
+
+    /**
+     * Check if status indicates the notification can be edited
+     * 
+     * @return bool
+     */
+    public function isStatusEditable(): bool
+    {
+        return $this->status->isEditable();
+    }
+
+    /**
+     * Check if status indicates the notification can be sent immediately
+     * 
+     * @return bool
+     */
+    public function canBeSent(): bool
+    {
+        return $this->status->canBeSent();
+    }
+
+    /**
+     * Check if status indicates the notification can be cancelled
+     * 
+     * @return bool
+     */
+    public function canBeCancelled(): bool
+    {
+        return $this->status->canBeCancelled();
+    }
+
+    /**
+     * Automatically set direction based on context
+     * 
+     * @param bool $isOutbound Whether this is an outbound notification
+     * @return self
+     */
+    public function autoSetDirection(bool $isOutbound = true): self
+    {
+        if ($this->isDraft()) {
+            $this->direction = NotificationDirection::DRAFT;
+        } else {
+            $this->direction = $isOutbound ? NotificationDirection::OUTBOUND : NotificationDirection::INBOUND;
+        }
+        
+        return $this;
+    }
+
+    /**
+     * Transition to the next logical status
+     * 
+     * @return bool True if transition was successful, false if no valid transition exists
+     */
+    public function transitionToNextStatus(): bool
+    {
+        $nextStatus = $this->status->getNextStatus();
+        
+        if ($nextStatus !== null) {
+            $this->status = $nextStatus;
+            return true;
+        }
+        
+        return false;
+    }
+
+    /**
+     * Check if transition to given status is valid
+     * 
+     * @param NotificationStatus $newStatus
+     * @return bool
+     */
+    public function canTransitionTo(NotificationStatus $newStatus): bool
+    {
+        return in_array($newStatus, $this->status->getValidTransitions());
+    }
+
+    /**
+     * Safely transition to new status if valid
+     * 
+     * @param NotificationStatus $newStatus
+     * @return bool True if transition was successful, false if invalid
+     */
+    public function safeTransitionTo(NotificationStatus $newStatus): bool
+    {
+        if ($this->canTransitionTo($newStatus)) {
+            $this->status = $newStatus;
+            return true;
+        }
+        
+        return false;
     }
 
     // Convenience methods for source tracking via metadata

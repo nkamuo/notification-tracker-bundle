@@ -11,6 +11,8 @@ use Nkamuo\NotificationTrackerBundle\Entity\EmailMessage;
 use Nkamuo\NotificationTrackerBundle\Entity\SmsMessage;
 use Nkamuo\NotificationTrackerBundle\Entity\MessageContent;
 use Nkamuo\NotificationTrackerBundle\Entity\MessageRecipient;
+use Nkamuo\NotificationTrackerBundle\Enum\NotificationDirection;
+use Nkamuo\NotificationTrackerBundle\Enum\MessageStatus;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Notifier\Notification\Notification as SymfonyNotification;
 
@@ -72,8 +74,8 @@ class NotificationTracker
             default => throw new \InvalidArgumentException("Unsupported message type: {$type}")
         };
 
-        $message->setDirection(Message::DIRECTION_INBOUND);
-        $message->setStatus(Message::STATUS_DELIVERED); // Inbound messages are already delivered
+        $message->setDirection(NotificationDirection::INBOUND);
+        $message->setStatus(MessageStatus::DELIVERED); // Inbound messages are already delivered
         $message->setMetadata($metadata);
 
         // Add sender as recipient (for inbound messages, sender becomes recipient)

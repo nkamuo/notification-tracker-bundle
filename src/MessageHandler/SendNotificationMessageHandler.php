@@ -11,6 +11,9 @@ use Nkamuo\NotificationTrackerBundle\Entity\SmsMessage;
 use Nkamuo\NotificationTrackerBundle\Entity\SlackMessage;
 use Nkamuo\NotificationTrackerBundle\Entity\MessageContent;
 use Nkamuo\NotificationTrackerBundle\Entity\MessageRecipient;
+use Nkamuo\NotificationTrackerBundle\Enum\NotificationDirection;
+use Nkamuo\NotificationTrackerBundle\Enum\NotificationStatus;
+use Nkamuo\NotificationTrackerBundle\Enum\MessageStatus;
 use Nkamuo\NotificationTrackerBundle\Message\SendNotificationMessage;
 use Nkamuo\NotificationTrackerBundle\Message\SendChannelMessage;
 use Psr\Log\LoggerInterface;
@@ -41,13 +44,13 @@ class SendNotificationMessageHandler
         }
 
         if (!in_array($notification->getStatus(), [
-            Notification::STATUS_DRAFT,
-            Notification::STATUS_SCHEDULED,
-            Notification::STATUS_QUEUED
+            NotificationStatus::DRAFT,
+            NotificationStatus::SCHEDULED,
+            NotificationStatus::QUEUED
         ])) {
             $this->logger->warning('Notification not in sendable status', [
                 'notification_id' => (string) $notification->getId(),
-                'status' => $notification->getStatus(),
+                'status' => $notification->getStatus()->value,
             ]);
             return;
         }
@@ -78,10 +81,10 @@ class SendNotificationMessageHandler
                 ->getSingleScalarResult();
 
             if ($messageCount > 0) {
-                $notification->setStatus(Notification::STATUS_QUEUED);
-                $notification->setDirection(Notification::DIRECTION_OUTBOUND);
+                $notification->setStatus(NotificationStatus::QUEUED);
+                $notification->setDirection(NotificationDirection::OUTBOUND);
             } else {
-                $notification->setStatus(Notification::STATUS_FAILED);
+                $notification->setStatus(NotificationStatus::FAILED);
             }
 
             $this->entityManager->flush();
@@ -162,8 +165,8 @@ class SendNotificationMessageHandler
         $messageClass = $this->getMessageClassForChannel($channel);
         $message = new $messageClass();
         
-        $message->setDirection($messageClass::DIRECTION_OUTBOUND);
-        $message->setStatus($messageClass::STATUS_PENDING);
+        $message->setDirection(NotificationDirection::OUTBOUND);
+        $message->setStatus(MessageStatus::PENDING);
         $message->setNotification($notification);
 
         // Handle individual message scheduling

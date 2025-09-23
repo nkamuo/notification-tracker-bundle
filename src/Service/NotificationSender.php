@@ -6,6 +6,7 @@ namespace Nkamuo\NotificationTrackerBundle\Service;
 
 use Doctrine\ORM\EntityManagerInterface;
 use Nkamuo\NotificationTrackerBundle\Entity\Notification;
+use Nkamuo\NotificationTrackerBundle\Enum\NotificationStatus;
 use Nkamuo\NotificationTrackerBundle\Message\SendNotificationMessage;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Messenger\Stamp\DelayStamp;
@@ -27,8 +28,8 @@ class NotificationSender
     {
         $now = $now ?? new \DateTimeImmutable();
         
-        if (!in_array($notification->getStatus(), [Notification::STATUS_DRAFT, Notification::STATUS_SCHEDULED, Notification::STATUS_QUEUED])) {
-            throw new \InvalidArgumentException(sprintf('Cannot send notification with status "%s"', $notification->getStatus()));
+        if (!in_array($notification->getStatus(), [NotificationStatus::DRAFT, NotificationStatus::SCHEDULED, NotificationStatus::QUEUED])) {
+            throw new \InvalidArgumentException(sprintf('Cannot send notification with status "%s"', $notification->getStatus()->value));
         }
 
         try {
@@ -42,9 +43,9 @@ class NotificationSender
             $stamps = [];
             if ($isScheduled) {
                 $stamps[] = new DelayStamp($delayMs);
-                $notification->setStatus(Notification::STATUS_SCHEDULED);
+                $notification->setStatus(NotificationStatus::SCHEDULED);
             } else {
-                $notification->setStatus(Notification::STATUS_QUEUED);
+                $notification->setStatus(NotificationStatus::QUEUED);
             }
 
             // Dispatch the message
@@ -88,8 +89,8 @@ class NotificationSender
     {
         $now = $now ?? new \DateTimeImmutable();
         
-        if (!in_array($notification->getStatus(), [Notification::STATUS_DRAFT, Notification::STATUS_SCHEDULED, Notification::STATUS_QUEUED])) {
-            throw new \InvalidArgumentException(sprintf('Cannot send notification with status "%s"', $notification->getStatus()));
+        if (!in_array($notification->getStatus(), [NotificationStatus::DRAFT, NotificationStatus::SCHEDULED, NotificationStatus::QUEUED])) {
+            throw new \InvalidArgumentException(sprintf('Cannot send notification with status "%s"', $notification->getStatus()->value));
         }
 
         if (empty($channels)) {
@@ -107,9 +108,9 @@ class NotificationSender
             $stamps = [];
             if ($isScheduled) {
                 $stamps[] = new DelayStamp($delayMs);
-                $notification->setStatus(Notification::STATUS_SCHEDULED);
+                $notification->setStatus(NotificationStatus::SCHEDULED);
             } else {
-                $notification->setStatus(Notification::STATUS_QUEUED);
+                $notification->setStatus(NotificationStatus::QUEUED);
             }
 
             // Dispatch the message
