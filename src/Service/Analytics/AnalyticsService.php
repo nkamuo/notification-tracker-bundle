@@ -117,10 +117,7 @@ class AnalyticsService
         
         // Detailed message status breakdown for specific channel
         $qb = $this->entityManager->createQueryBuilder()
-            ->select('m.status, COUNT(m.id) as count, 
-                     AVG(CASE WHEN m.sentAt IS NOT NULL THEN 
-                         EXTRACT(EPOCH FROM (m.sentAt - m.createdAt)) 
-                     ELSE NULL END) as avgDeliveryTime')
+            ->select('m.status, COUNT(m.id) as count')
             ->from($messageClass, 'm')
             ->where('m.createdAt >= :startDate')
             ->andWhere('m.createdAt <= :endDate')
