@@ -262,7 +262,7 @@ class RealtimeProvider implements ProviderInterface
         ];
     }
 
-    private function timeAgo(\DateTime $datetime): string
+    private function timeAgo(\DateTimeInterface $datetime): string
     {
         $now = new \DateTime();
         $diff = $now->diff($datetime);
