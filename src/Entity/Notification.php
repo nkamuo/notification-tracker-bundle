@@ -22,6 +22,7 @@ use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Nkamuo\NotificationTrackerBundle\Repository\NotificationRepository;
 use Nkamuo\NotificationTrackerBundle\Config\ApiRoutes;
+use Nkamuo\NotificationTrackerBundle\Controller\Api\SendNotificationController;
 use Nkamuo\NotificationTrackerBundle\Enum\NotificationDirection;
 use Nkamuo\NotificationTrackerBundle\Enum\NotificationStatus;
 use Symfony\Component\Serializer\Annotation\Groups;
@@ -50,12 +51,14 @@ use Symfony\Component\Validator\Constraints as Assert;
             normalizationContext: ['groups' => ['notification:detail']]
         ),
         new Post(
+            controller: SendNotificationController::class,
             uriTemplate: ApiRoutes::NOTIFICATIONS,
             denormalizationContext: ['groups' => ['notification:create']],
             normalizationContext: ['groups' => ['notification:detail']],
             processor: 'Nkamuo\NotificationTrackerBundle\State\NotificationCreateProcessor'
         ),
         new Put(
+            controller: SendNotificationController::class,
             uriTemplate: ApiRoutes::NOTIFICATIONS . '/{id}',
             requirements: ['id' => '[0-9A-HJKMNP-TV-Z]{26}'],
             denormalizationContext: ['groups' => ['notification:write']],
