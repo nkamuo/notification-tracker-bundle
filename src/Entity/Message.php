@@ -87,6 +87,7 @@ use Symfony\Component\Validator\Constraints as Assert;
     'subject' => 'partial',
     'notification.type' => 'exact',
     'notification.subject' => 'partial',
+    'notification.direction' => 'exact',
     'labels.name' => 'exact'
 ])]
 #[ApiFilter(DateFilter::class, properties: ['createdAt', 'sentAt'])]
