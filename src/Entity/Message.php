@@ -13,6 +13,8 @@ use ApiPlatform\Metadata\Delete;
 use ApiPlatform\Doctrine\Orm\Filter\SearchFilter;
 use ApiPlatform\Doctrine\Orm\Filter\DateFilter;
 use ApiPlatform\Doctrine\Orm\Filter\OrderFilter;
+use Nkamuo\NotificationTrackerBundle\ApiPlatform\Filter\NotInFilter;
+use Nkamuo\NotificationTrackerBundle\ApiPlatform\Filter\NotEqualsFilter;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
@@ -92,6 +94,24 @@ use Symfony\Component\Validator\Constraints as Assert;
 ])]
 #[ApiFilter(DateFilter::class, properties: ['createdAt', 'sentAt'])]
 #[ApiFilter(OrderFilter::class, properties: ['createdAt', 'sentAt', 'status'], arguments: ['orderParameterName' => 'order'])]
+#[ApiFilter(NotInFilter::class, properties: [
+    'status' => null,
+    'type' => null,
+    'transportName' => null,
+    'notification.status' => null,
+    'notification.type' => null,
+    'notification.direction' => null
+])]
+#[ApiFilter(NotEqualsFilter::class, properties: [
+    'status' => null,
+    'type' => null,
+    'transportName' => null,
+    'subject' => null,
+    'notification.status' => null,
+    'notification.type' => null,
+    'notification.direction' => null,
+    'notification.subject' => null
+])]
 abstract class Message
 {
     // Status constants - DEPRECATED: Use MessageStatus enum instead
