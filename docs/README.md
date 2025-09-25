@@ -1,9 +1,29 @@
-# 📚 Notification Tracker Bundle - Complete Documentation Index
+# 📚 Notification Tracker Bundle Documentation
 
-## 🚀 Quick Start
-- **[Installation Guide](../README.md#installation)** - Get started with Composer installation
-- **[Basic Configuration](../README.md#configuration)** - Essential setup steps
-- **[API Overview](API-DOCUMENTATION.md#quick-start-guide)** - REST API basics
+> **⚠️ EXPERIMENTAL** - This bundle is in active development and should not be used in production.
+
+## 🎯 Quick Navigation
+
+**START HERE:** 👉 **[Complete Guide](MAIN_DOCUMENTATION.md)** - Everything you need to know
+
+### Essential Documents
+- 📖 **[Main Documentation](MAIN_DOCUMENTATION.md)** - Complete setup and usage guide  
+- 🌐 **[API Reference](API_REFERENCE.md)** - REST API endpoints
+- 🔍 **[Custom Filters](API_FILTERS.md)** - Advanced filtering options
+- 📁 **[Documentation Index](DOCUMENTATION_INDEX.md)** - File organization guide
+- ⚠️ **[Experimental Notice](../EXPERIMENTAL.md)** - Important warnings
+
+## How This Bundle Works
+
+**This bundle automatically tracks emails and notifications** sent through:
+- ✅ **Symfony Mailer** (`$mailer->send($email)`) 
+- ✅ **Symfony Notifier** (`$notifier->send($notification)`)
+
+**No code changes required!** Just install, configure, and start tracking.
+
+## ⚠️ Documentation Notice
+
+Many files in this `docs/` folder contain **outdated information** that references Messenger usage instead of the actual Mailer/Notifier tracking. Always start with the main documentation files listed above.
 
 ---
 

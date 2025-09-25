@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace Nkamuo\NotificationTrackerBundle\Entity;
 
 use ApiPlatform\Metadata\ApiResource;
+use ApiPlatform\Metadata\Get;
 use ApiPlatform\Metadata\GetCollection;
+use ApiPlatform\Metadata\Link;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Nkamuo\NotificationTrackerBundle\Repository\MessageEventRepository;
@@ -22,11 +24,32 @@ use Symfony\Component\Uid\Ulid;
     description: 'Message lifecycle events',
     operations: [
         new GetCollection(
-            uriTemplate: ApiRoutes::MESSAGES . '/{id}/events',
+            uriTemplate: ApiRoutes::MESSAGES . '/{message}/events',
             requirements: ['id' => '[0-9A-HJKMNP-TV-Z]{26}'],
-            normalizationContext: ['groups' => ['event:read']]
+            normalizationContext: ['groups' => ['event:read']],
+            uriVariables: [
+                'message' => new Link(
+                    fromProperty: 'events',
+                    fromClass: Message::class
+                ),
+            ],
         ),
     ]
+)]
+#[ApiResource(
+    uriTemplate: ApiRoutes::MESSAGES . '/{message}/events/{id}',
+    operations: [
+        new Get(),
+    ],
+    uriVariables: [
+        'message' => new Link(
+            fromProperty: 'events',
+            fromClass: Message::class
+        ),
+        'id' => new Link(
+            fromClass: self::class,
+        ),
+    ],
 )]
 class MessageEvent
 {

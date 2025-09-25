@@ -1,33 +1,42 @@
-# 📚 Custom Notification Transport Documentation
+# � Notification Tracker Bundle
 
 > **⚠️ EXPERIMENTAL** - This project is in active development and should not be used in production environments. APIs and features may change without notice.
 
-Welcome to the **Custom Notification Transport** documentation! This transport provides enhanced control and rich analytics for Symfony Messenger notifications.
+**Automatically track and analyze** all emails and notifications sent through Symfony Mailer and Notifier components.
+
+## 🎯 What This Bundle Does
+
+This bundle **automatically captures and tracks** notifications sent through:
+- ✅ **Symfony Mailer** - All emails sent via `$mailer->send()`
+- ✅ **Symfony Notifier** - All notifications sent via `$notifier->send()`  
+- ✅ **Manual API** - Custom notifications via REST API
+
+**No code changes required!** Just install, configure, and start tracking.
+
+## 🚀 Quick Start
+
+1. **Install**: `composer require nkamuo/notification-tracker-bundle`
+2. **Configure**: Add to `bundles.php`
+3. **Migrate**: Run `doctrine:migrations:migrate`
+4. **Use**: Send emails/notifications as normal - they're automatically tracked!
+
+## � Documentation
+
+**👉 START HERE: [Complete Documentation](docs/MAIN_DOCUMENTATION.md)**
+
+### Essential Links
+- 📖 **[Main Guide](docs/MAIN_DOCUMENTATION.md)** - Complete setup and usage
+- 🌐 **[API Reference](docs/API_REFERENCE.md)** - REST API documentation  
+- 🔍 **[Custom Filters](docs/API_FILTERS.md)** - Advanced API filtering
+- ⚠️ **[Experimental Notice](EXPERIMENTAL.md)** - Important warnings
 
 ## 🧪 Experimental Status
 
 **This is an experimental project** - use at your own risk:
-- ✅ Core functionality implemented and tested
-- ⚠️ APIs may change in future versions  
+- ✅ Core tracking functionality works
+- ⚠️ APIs may change without notice  
 - 🚧 Active development in progress
 - 🔬 Suitable for testing and evaluation only
-
-## 📋 Documentation Overview
-
-### 🚀 [Quick Start Guide](USAGE_GUIDE.md)
-Complete step-by-step guide to integrate and use the transport in your application.
-
-**What you'll learn:**
-- Installation and setup
-- Basic configuration
-- Message dispatching with stamps
-- Monitoring and analytics
-
-### 🔧 [Configuration Examples](CONFIGURATION_EXAMPLES.md)
-Real-world configuration patterns and best practices.
-
-**What you'll learn:**
-- Multi-provider setups
 - Environment-specific configurations
 - Performance optimization
 - Advanced usage patterns

@@ -55,7 +55,7 @@ This project will be considered production-ready when:
 ## Contact
 
 For questions about this experimental project:
-- **Author**: nkamuo
+- **Author**: Callistus Nkamuo
 - **Email**: callistus@anvila.tech
 - **Note**: Support is limited for experimental features
 
