@@ -25,7 +25,7 @@ use Symfony\Component\Uid\Ulid;
     operations: [
         new GetCollection(
             uriTemplate: ApiRoutes::MESSAGES . '/{message}/events',
-            requirements: ['id' => '[0-9A-HJKMNP-TV-Z]{26}'],
+            requirements: ['message' => '[0-9A-HJKMNP-TV-Z]{26}'],
             normalizationContext: ['groups' => ['event:read']],
             uriVariables: [
                 'message' => new Link(
@@ -37,6 +37,7 @@ use Symfony\Component\Uid\Ulid;
     ]
 )]
 #[ApiResource(
+    shortName: 'MessageEvent',
     uriTemplate: ApiRoutes::MESSAGES . '/{message}/events/{id}',
     operations: [
         new Get(),
