@@ -1,14 +1,22 @@
 services:
-    # Commands - Only include existing command classes
+    # Commands - Only include existing command classes  
     Nkamuo\NotificationTrackerBundle\Command\ProcessFailedMessagesCommand:
+        arguments:
+            $entityManager: '@doctrine.orm.entity_manager'
+            $retryService: '@Nkamuo\NotificationTrackerBundle\Service\MessageRetryService'
         tags:
             - { name: 'console.command' }
     
-    # New commands for notification management
+    # New commands with explicit dependency injection
     Nkamuo\NotificationTrackerBundle\Command\CreateNotificationCommand:
+        arguments:
+            $entityManager: '@doctrine.orm.entity_manager'
         tags:
             - { name: 'console.command' }
     
     Nkamuo\NotificationTrackerBundle\Command\SendEmailCommand:
+        arguments:
+            $messageBus: '@messenger.default_bus'
+            $entityManager: '@doctrine.orm.entity_manager'
         tags:
             - { name: 'console.command' }
