@@ -96,9 +96,9 @@ services:
 namespace App\Controller;
 
 use App\Message\EmailNotification;
-use Nkamuo\NotificationTrackerBundle\Messenger\Stamp\NotificationProviderStamp;
-use Nkamuo\NotificationTrackerBundle\Messenger\Stamp\NotificationCampaignStamp;
-use Nkamuo\NotificationTrackerBundle\Messenger\Stamp\NotificationTemplateStamp;
+use Nkamuo\NotificationTrackerBundle\Stamp\NotificationProviderStamp;
+use Nkamuo\NotificationTrackerBundle\Stamp\NotificationCampaignStamp;
+use Nkamuo\NotificationTrackerBundle\Stamp\NotificationTemplateStamp;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Messenger\MessageBusInterface;
@@ -137,9 +137,9 @@ namespace App\Service;
 
 use App\Message\EmailNotification;
 use App\Message\SmsNotification;
-use Nkamuo\NotificationTrackerBundle\Messenger\Stamp\NotificationCampaignStamp;
-use Nkamuo\NotificationTrackerBundle\Messenger\Stamp\NotificationProviderStamp;
-use Nkamuo\NotificationTrackerBundle\Messenger\Stamp\NotificationTemplateStamp;
+use Nkamuo\NotificationTrackerBundle\Stamp\NotificationCampaignStamp;
+use Nkamuo\NotificationTrackerBundle\Stamp\NotificationProviderStamp;
+use Nkamuo\NotificationTrackerBundle\Stamp\NotificationTemplateStamp;
 use Symfony\Component\Messenger\MessageBusInterface;
 
 class CampaignNotificationService

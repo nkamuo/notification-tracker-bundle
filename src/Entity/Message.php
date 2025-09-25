@@ -62,7 +62,11 @@ use Symfony\Component\Validator\Constraints as Assert;
         new Get(
             uriTemplate: ApiRoutes::MESSAGES . '/{id}',
             requirements: ['id' => '[0-9A-HJKMNP-TV-Z]{26}'],
-            normalizationContext: ['groups' => ['message:list','message:detail', 'message:read']]
+            normalizationContext: ['groups' => [
+                'message:list',
+                'message:detail',
+                'message:read',
+                ]]
         ),
         new Post(
             uriTemplate: ApiRoutes::MESSAGES . '/{id}/retry',

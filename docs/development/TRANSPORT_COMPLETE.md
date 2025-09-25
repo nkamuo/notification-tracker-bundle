@@ -26,9 +26,9 @@ framework:
 
 ### 2. Custom Stamps for Rich Metadata
 ```php
-use Nkamuo\NotificationTrackerBundle\Messenger\Stamp\NotificationProviderStamp;
-use Nkamuo\NotificationTrackerBundle\Messenger\Stamp\NotificationCampaignStamp;
-use Nkamuo\NotificationTrackerBundle\Messenger\Stamp\NotificationTemplateStamp;
+use Nkamuo\NotificationTrackerBundle\Stamp\NotificationProviderStamp;
+use Nkamuo\NotificationTrackerBundle\Stamp\NotificationCampaignStamp;
+use Nkamuo\NotificationTrackerBundle\Stamp\NotificationTemplateStamp;
 
 $bus->dispatch($message, [
     new NotificationProviderStamp('email', 10), // provider + priority
