@@ -141,6 +141,16 @@ enum NotificationStatus: string
     }
 
     /**
+     * Check if status indicates the notification is in draft state
+     * 
+     * @return bool
+     */
+    public function isDraft(): bool
+    {
+        return $this === self::DRAFT;
+    }
+
+    /**
      * Get the next logical status in the workflow
      * 
      * @return self|null

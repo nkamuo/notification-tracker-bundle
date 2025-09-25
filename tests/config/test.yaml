@@ -3,6 +3,15 @@ framework:
   test: true
   session:
     storage_factory_id: session.storage.factory.mock_file
+
+# Add monolog configuration for testing
+monolog:
+  handlers:
+    main:
+      type: stream
+      path: php://stdout
+      level: info
+      channels: ['!event']
   messenger:
     failure_transport: failed
     transports:

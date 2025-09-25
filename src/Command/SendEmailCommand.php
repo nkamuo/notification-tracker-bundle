@@ -26,8 +26,8 @@ use Nkamuo\NotificationTrackerBundle\Enum\NotificationImportance;
 use Doctrine\ORM\EntityManagerInterface;
 
 #[AsCommand(
-    name: 'notification-tracker:send-email',
-    description: 'Send emails with comprehensive recipient support (TO, CC, BCC) and draft mode'
+    name: 'notification-tracker:send-bulk-email',
+    description: 'Send an email to multiple recipients with CC/BCC support'
 )]
 class SendEmailCommand extends Command
 {

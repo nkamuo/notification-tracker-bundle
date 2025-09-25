@@ -3,3 +3,12 @@ services:
     Nkamuo\NotificationTrackerBundle\Command\ProcessFailedMessagesCommand:
         tags:
             - { name: 'console.command' }
+    
+    # New commands for notification management
+    Nkamuo\NotificationTrackerBundle\Command\CreateNotificationCommand:
+        tags:
+            - { name: 'console.command' }
+    
+    Nkamuo\NotificationTrackerBundle\Command\SendEmailCommand:
+        tags:
+            - { name: 'console.command' }
