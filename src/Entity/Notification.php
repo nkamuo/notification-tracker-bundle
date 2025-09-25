@@ -118,7 +118,7 @@ class Notification
     public const DIRECTION_INBOUND = 'inbound';   // Received notifications/messages
     /** @deprecated Use NotificationDirection::OUTBOUND instead */
     public const DIRECTION_OUTBOUND = 'outbound'; // Sent notifications/messages  
-    /** @deprecated Use NotificationDirection::DRAFT instead */
+    /** @deprecated Draft state moved to NotificationStatus::DRAFT - direction no longer used for draft */
     public const DIRECTION_DRAFT = 'draft';       // Draft notifications (not yet sent)
 
     /** @deprecated Use NotificationStatus::values() instead */
@@ -158,7 +158,7 @@ class Notification
 
     #[ORM\Column(type: 'string', enumType: NotificationDirection::class)]
     #[Groups(['notification:read', 'notification:list', 'notification:write', 'notification:create'])]
-    private NotificationDirection $direction = NotificationDirection::DRAFT;
+    private NotificationDirection $direction = NotificationDirection::OUTBOUND;
 
     #[ORM\Column(type: Types::JSON)]
     #[Groups(['notification:read', 'notification:write', 'notification:list', 'notification:detail', 'notification:create'])]
@@ -746,11 +746,8 @@ class Notification
      */
     public function autoSetDirection(bool $isOutbound = true): self
     {
-        if ($this->isDraft()) {
-            $this->direction = NotificationDirection::DRAFT;
-        } else {
-            $this->direction = $isOutbound ? NotificationDirection::OUTBOUND : NotificationDirection::INBOUND;
-        }
+        // Direction is now only for in/out flow, not draft state
+        $this->direction = $isOutbound ? NotificationDirection::OUTBOUND : NotificationDirection::INBOUND;
         
         return $this;
     }

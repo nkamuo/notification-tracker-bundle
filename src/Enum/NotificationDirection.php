@@ -10,13 +10,11 @@ namespace Nkamuo\NotificationTrackerBundle\Enum;
  * Defines the flow direction of notifications and messages:
  * - INBOUND: Messages/notifications received from external sources (webhooks, replies, etc.)
  * - OUTBOUND: Messages/notifications being sent to external recipients
- * - DRAFT: Notifications in draft state, not yet sent or scheduled
  */
 enum NotificationDirection: string
 {
     case INBOUND = 'inbound';
     case OUTBOUND = 'outbound';
-    case DRAFT = 'draft';
 
     /**
      * Get all valid direction values as an array
@@ -37,8 +35,7 @@ enum NotificationDirection: string
     {
         return match($this) {
             self::INBOUND => 'Inbound',
-            self::OUTBOUND => 'Outbound', 
-            self::DRAFT => 'Draft',
+            self::OUTBOUND => 'Outbound',
         };
     }
 
@@ -52,7 +49,6 @@ enum NotificationDirection: string
         return match($this) {
             self::INBOUND => 'Messages received from external sources',
             self::OUTBOUND => 'Messages sent to external recipients',
-            self::DRAFT => 'Draft notifications not yet sent',
         };
     }
 
@@ -77,12 +73,13 @@ enum NotificationDirection: string
     }
 
     /**
-     * Check if direction is for draft state
+     * Check if direction is for draft state (deprecated - use status instead)
      * 
+     * @deprecated Draft state should be checked via NotificationStatus, not direction
      * @return bool
      */
     public function isDraft(): bool
     {
-        return $this === self::DRAFT;
+        return false; // No directions are drafts anymore
     }
 }

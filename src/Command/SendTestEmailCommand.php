@@ -44,6 +44,7 @@ class SendTestEmailCommand extends Command
             ->addOption('campaign', 'c', InputOption::VALUE_OPTIONAL, 'Campaign identifier')
             ->addOption('template', 't', InputOption::VALUE_OPTIONAL, 'Template identifier')
             ->addOption('provider', null, InputOption::VALUE_OPTIONAL, 'Email provider', 'email')
+            ->addOption('draft', 'd', InputOption::VALUE_NONE, 'Save as draft instead of sending')
             ->addOption('async', null, InputOption::VALUE_NONE, 'Send asynchronously through transport')
         ;
     }
@@ -61,6 +62,7 @@ class SendTestEmailCommand extends Command
         $campaign = $input->getOption('campaign');
         $template = $input->getOption('template');
         $provider = $input->getOption('provider');
+        $isDraft = $input->getOption('draft');
         $async = $input->getOption('async');
 
         $io->title('📧 Sending Test Email via Notification Transport');
