@@ -1,8 +1,8 @@
 {
     "name": "nkamuo/notification-tracker-bundle",
     "type": "symfony-bundle",
-    "description": "Notification and email tracking bundle for Symfony with webhook support",
-    "keywords": ["symfony", "bundle", "notification", "email", "tracking", "webhook", "mailer", "notifier"],
+    "description": "[EXPERIMENTAL] Notification and email tracking bundle for Symfony with webhook support - DO NOT USE IN PRODUCTION",
+    "keywords": ["symfony", "bundle", "notification", "email", "tracking", "webhook", "mailer", "notifier", "experimental"],
     "license": "MIT",
     "authors": [
         {

@@ -1,6 +1,16 @@
 # 📚 Custom Notification Transport Documentation
 
+> **⚠️ EXPERIMENTAL** - This project is in active development and should not be used in production environments. APIs and features may change without notice.
+
 Welcome to the **Custom Notification Transport** documentation! This transport provides enhanced control and rich analytics for Symfony Messenger notifications.
+
+## 🧪 Experimental Status
+
+**This is an experimental project** - use at your own risk:
+- ✅ Core functionality implemented and tested
+- ⚠️ APIs may change in future versions  
+- 🚧 Active development in progress
+- 🔬 Suitable for testing and evaluation only
 
 ## 📋 Documentation Overview
 

@@ -12,8 +12,12 @@ use Doctrine\ORM\QueryBuilder;
 /**
  * Filter to exclude records where a property value is in a given set of values.
  * 
+ * ⚠️ EXPERIMENTAL - This filter is in development and may change without notice.
+ * 
  * Usage: ?property[notin]=value1,value2,value3
  * Example: ?status[notin]=pending,failed
+ * 
+ * @experimental
  */
 final class NotInFilter extends AbstractFilter
 {
