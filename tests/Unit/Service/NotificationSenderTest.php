@@ -112,7 +112,7 @@ class NotificationSenderTest extends TestCase
         $notification->setStatus(Notification::STATUS_SENT); // Invalid status
         
         $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('Notification must be in draft, scheduled, or queued status to send');
+        $this->expectExceptionMessage('Cannot send notification with status "sent"');
         
         $this->notificationSender->sendNotification($notification);
     }
