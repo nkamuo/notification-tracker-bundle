@@ -12,8 +12,12 @@ use Doctrine\ORM\QueryBuilder;
 /**
  * Filter to exclude records where a property value equals a given value.
  * 
+ * ⚠️ EXPERIMENTAL - This filter is in development and may change without notice.
+ * 
  * Usage: ?property[ne]=value
  * Example: ?status[ne]=pending
+ * 
+ * @experimental
  */
 final class NotEqualsFilter extends AbstractFilter
 {

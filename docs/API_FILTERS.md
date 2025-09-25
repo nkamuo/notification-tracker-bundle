@@ -1,6 +1,17 @@
 # Custom API Platform Filters
 
+> **⚠️ EXPERIMENTAL FEATURES** - These filters are in active development and may change without notice. Do not use in production.
+
 This document describes the custom API Platform filters implemented for the Notification Tracker Bundle.
+
+## ⚠️ Important Notice
+
+**These filters are experimental and should not be used in production:**
+
+- 🧪 **Experimental Status**: APIs may change without deprecation warnings
+- 🚧 **Under Development**: Features may not work as expected
+- 📝 **Subject to Change**: Parameter names and behavior may be modified
+- 🔬 **Testing Only**: Use only in development/testing environments
 
 ## NotInFilter
 
